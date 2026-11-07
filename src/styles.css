@@ -1,0 +1,238 @@
+:root {
+  --bg: #121a16;
+  --bg-elev: #1a2420;
+  --ink: #e8f0ea;
+  --muted: #9bb0a3;
+  --accent: #c4a35a;
+  --accent-ink: #1a1408;
+  --line: #2a3a32;
+  --vip: #8b6b2e;
+  --comfort: #3d6b5a;
+  --standard: #3a4f62;
+  --sold: #4b5563;
+  --ok: #7dcea0;
+  --err: #e07a7a;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: "Avenir Next", "Segoe UI", Futura, "Trebuchet MS", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #24352c 0%, transparent 55%),
+    linear-gradient(160deg, #0e1411 0%, var(--bg) 45%, #15201a 100%);
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.hero {
+  margin-bottom: 1.75rem;
+}
+
+.brand {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--accent);
+}
+
+.hero h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-weight: 600;
+}
+
+.lede {
+  margin: 0;
+  color: var(--muted);
+  max-width: 36rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.controls select {
+  min-width: 16rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  color: var(--ink);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.panel {
+  background: color-mix(in srgb, var(--bg-elev) 88%, black);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.seat-map {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.screen-label {
+  text-align: center;
+  margin-bottom: 0.6rem;
+  padding: 0.35rem;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #2a3a55, #4a5f8a, #2a3a55);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.row-label {
+  width: 1.2rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.seat-row-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+}
+
+.seat {
+  width: 1.7rem;
+  height: 1.7rem;
+  border: none;
+  border-radius: 5px;
+  color: #f5f7f6;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.seat--vip { background: var(--vip); }
+.seat--comfort { background: var(--comfort); }
+.seat--standard { background: var(--standard); }
+.seat--sold {
+  background: var(--sold);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.seat--selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  margin-right: 0.3rem;
+  vertical-align: -1px;
+}
+.swatch--vip { background: var(--vip); }
+.swatch--comfort { background: var(--comfort); }
+.swatch--standard { background: var(--standard); }
+.swatch--sold { background: var(--sold); }
+
+.view-3d {
+  height: 320px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.view-3d-caption {
+  margin: 0.55rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.checkout {
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+}
+
+.buy {
+  margin-top: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.buy:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ok { color: var(--ok); }
+.err { color: var(--err); }

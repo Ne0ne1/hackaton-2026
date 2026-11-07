@@ -10,3 +10,5 @@ build/
 .codex/
 docs/codex-last.md
 docs/codex-prompt.md
+*.local
+.vite/

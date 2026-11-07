@@ -24,6 +24,7 @@
 | T-002 | done | cursor | Безопасная диагностика готовности, без запуска Codex и без установки программ | `docs/TASKS.md` | `zsh -n scripts/run-codex.sh`; `codex --version`; `codex login status`; `git --version`; `node --version` |
 | T-003 | done | cursor | Создать GitHub-репозиторий и залить текущий каркас | `.gitignore`, `docs/TASKS.md`, `docs/DECISIONS.md`, git remote | `gh repo view Ne0ne1/hackaton-2026`; `git status` |
 | T-004 | done | cursor | Адаптировать инструкции под параллельную работу Cursor и Cline/MiniMax | `AGENTS.md`, `.cursor/rules/**`, `.clinerules/**`, `docs/TEAM_PROTOCOL.md`, `docs/INTEGRATION_CONTRACT.md`, `docs/CLINE_PROGRESS.md`, `docs/TASKS.md`, `docs/DECISIONS.md` | сверка правил; продукт не разрабатывался |
+| T-005 | done | cursor | Создать ветки на GitHub; каркас ядра, модель мест, утвердить контракт | `feat/cursor-core`, `feat/cline-experience`, `src/**`, `docs/INTEGRATION_CONTRACT.md`, `package.json` | `npm run build` |
 
 ## Журнал
 
@@ -51,3 +52,9 @@
 - Исполнитель: Cursor Agent. Модель чата не переключалась. Codex не запускался. Продукт не разрабатывался.
 - Результат: добавлены `docs/TEAM_PROTOCOL.md`, `docs/INTEGRATION_CONTRACT.md`, `docs/CLINE_PROGRESS.md`; обновлены `AGENTS.md`, `.cursor/rules/*`, `.clinerules/01-minimax-executor.md`, журналы. Параллельные ветки `feat/cursor-core` и `feat/cline-experience`; журналы разделены; контракт предварительный.
 - Проверки: набор тестов продукта отсутствует; сверка правил на противоречия выполнена вручную.
+
+### T-005 — ветки, каркас ядра, контракт v1
+
+- Исполнитель: Cursor Agent на `feat/cursor-core`. Codex не запускался. SeatMatch не начинался.
+- Результат: на GitHub опубликованы `feat/cursor-core` и `feat/cline-experience`. Vite+React+R3F каркас: кинотеатр/сеанс, схема мест, 3D-вид с места, покупка в localStorage. API в `src/core/hallApi.ts`. Контракт утверждён (`docs/INTEGRATION_CONTRACT.md` v1). Зона MiniMax: `src/experience/`.
+- Проверки: `npm run build`.
