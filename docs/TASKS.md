@@ -12,9 +12,7 @@
 
 | Путь | Владелец | Задача | С |
 |------|----------|--------|---|
-| `.gitignore` | cursor | T-003 | создание GitHub-репозитория |
-| `docs/TASKS.md` | cursor | T-003 | создание GitHub-репозитория |
-| `docs/DECISIONS.md` | cursor | T-003 | создание GitHub-репозитория |
+| — | — | — | — |
 
 ## Очередь
 
@@ -22,7 +20,7 @@
 |----|--------|-------------|--------|-------|----------|
 | T-001 | done | cursor | Подготовить протокол совместной работы агентов, без конкурсного продукта | `AGENTS.md`, `.cursor/rules/agent-routing.mdc`, `.cursor/rules/shared-context.mdc`, `docs/TASKS.md`, `docs/DECISIONS.md`, `scripts/run-codex.sh` | `zsh -n scripts/run-codex.sh`; отдельных тестов проекта нет |
 | T-002 | done | cursor | Безопасная диагностика готовности, без запуска Codex и без установки программ | `docs/TASKS.md` | `zsh -n scripts/run-codex.sh`; `codex --version`; `codex login status`; `git --version`; `node --version` |
-| T-003 | in_progress | cursor | Создать GitHub-репозиторий и залить текущий каркас | `.gitignore`, `docs/TASKS.md`, `docs/DECISIONS.md`, git remote | `gh repo view`; `git status` |
+| T-003 | done | cursor | Создать GitHub-репозиторий и залить текущий каркас | `.gitignore`, `docs/TASKS.md`, `docs/DECISIONS.md`, git remote | `gh repo view Ne0ne1/hackaton-2026`; `git status` |
 
 ## Журнал
 
@@ -38,3 +36,9 @@
 - Исполнитель: Cursor Agent. Модель чата не переключалась. Codex с заданием не запускался.
 - Результат: инструкции, CLI, вход Codex, Git и Node.js на месте. Платные API проект не требует. Папка ещё не git-репозиторий.
 - Проверки: синтаксис скрипта успешен; `codex-cli 0.153.4`, вход через ChatGPT; Git 2.50.1; Node.js v24.22.2. Тестов продукта нет.
+
+### T-003 — GitHub-репозиторий
+
+- Исполнитель: Cursor Agent. Модель чата не переключалась. Codex не запускался.
+- Результат: локальный git на `main`, remote `origin`, приватный репозиторий https://github.com/Ne0ne1/hackaton-2026, каркас запушен.
+- Проверки: `git status` чистый после пуша; ветка tracking `origin/main`.
