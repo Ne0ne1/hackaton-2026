@@ -20,6 +20,7 @@
 
 | ID | Статус | Исполнитель | Задача | Файлы | Проверки |
 |----|--------|-------------|--------|-------|----------|
+| T-011 | done | cursor | Тёмный билетный UI + 3D с поворотом головы и зрителями | `App`, `SeatMap`, `styles`, `hallApi`, `demoHall`, `SeatView3D`, `src/scene/**` | `npm run build`; 14/14; head-look + audience |
 | T-001 | done | cursor | Подготовить протокол совместной работы агентов, без конкурсного продукта | `AGENTS.md`, `.cursor/rules/agent-routing.mdc`, `.cursor/rules/shared-context.mdc`, `docs/TASKS.md`, `docs/DECISIONS.md`, `scripts/run-codex.sh` | `zsh -n scripts/run-codex.sh`; отдельных тестов проекта нет |
 | T-002 | done | cursor | Безопасная диагностика готовности, без запуска Codex и без установки программ | `docs/TASKS.md` | `zsh -n scripts/run-codex.sh`; `codex --version`; `codex login status`; `git --version`; `node --version` |
 | T-003 | done | cursor | Создать GitHub-репозиторий и залить текущий каркас | `.gitignore`, `docs/TASKS.md`, `docs/DECISIONS.md`, git remote | `gh repo view Ne0ne1/hackaton-2026`; `git status` |
@@ -29,6 +30,7 @@
 | T-007 | done | cursor | Интегрировать SeatMatch (cherry-pick fef2196) в App | `src/App.tsx`, `src/styles.css`, `src/experience/seatMatch/**` | `npm run build`; `node --test` 12/12 |
 | T-008 | done | cursor | Передать владение 3D MiniMax (только правила, два коммита) | 6 файлов протокола; `docs/TASKS.md`; `docs/DECISIONS.md` | `git show --stat`; 3D-код не менялся |
 | T-009 | done | cursor | Дизайн схемы/покупки + cherry-pick редизайна SeatMatch | `App.tsx`, `SeatMap.tsx`, `styles.css`, `index.html`, seatMatch | `npm run build` |
+| T-010 | done | cursor | Интерактивная 3D-кинозона с двумя трейлерами и HRTF-звуком | `src/scene/cinema/**`, `SeatView3D.tsx`, `public/assets/**` | `npm run build`; `node --test` cinema+seatMatch |
 
 ## Журнал
 
@@ -87,3 +89,9 @@
 - Исполнитель: Cursor. `SeatView3D` не менялся.
 - Результат: киношный UI (шрифты Cormorant/Outfit, схема с проходом, checkout); cherry-pick `6b8066f` (редизайн SeatMatch MiniMax).
 - Проверки: `npm run build`.
+
+### T-010 — 3D-кинозона трейлеров
+
+- Исполнитель: Cursor на `feature/3d-cinema-trailers` (база: merge `feat/cline-experience` → `96789fd`).
+- Результат: две боковые панели (Sintel, Big Buck Bunny), video texture, DOM-контролы, `trailerStore` (один активный), Web Audio HRTF, локальные mp4/webm ≤720p, атрибуция CC BY 3.0.
+- Проверки: `npm run build` OK; `node --experimental-strip-types --test` seatMatch + cinema — pass. Пространственный звук — ручная проверка в браузере.

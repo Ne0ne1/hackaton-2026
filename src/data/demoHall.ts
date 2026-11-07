@@ -2,14 +2,14 @@ import type { Cinema, HallGeometry, Seat, SeatCategory, Session } from '@/types/
 
 const PRICE: Record<SeatCategory, number> = {
   standard: 350,
-  comfort: 480,
-  vip: 650,
+  comfort: 550,
+  vip: 900,
 }
 
 function categoryForRow(row: number, totalRows: number): SeatCategory {
-  if (row <= 2) return 'vip'
-  if (row <= Math.ceil(totalRows * 0.55)) return 'comfort'
-  return 'standard'
+  if (row <= 3) return 'standard'
+  if (row === totalRows) return 'vip'
+  return 'comfort'
 }
 
 /** Строит прямоугольный зал: ряды вдоль Z, места вдоль X, экран впереди (z отрицательный). */
@@ -22,25 +22,31 @@ export function buildRectangularHall(options: {
   seatSpacing?: number
   firstRowZ?: number
 }): HallGeometry {
-  const rowSpacing = options.rowSpacing ?? 1.05
+  const rowSpacing = options.rowSpacing ?? 1.12
   const seatSpacing = options.seatSpacing ?? 0.9
   const firstRowZ = options.firstRowZ ?? -4.2
   const seats: Seat[] = []
 
   for (let row = 1; row <= options.rows; row += 1) {
     const category = categoryForRow(row, options.rows)
+    const isSofaRow = category === 'vip'
+    const seatsInRow = isSofaRow ? Math.max(6, Math.floor(options.seatsPerRow * 0.6)) : options.seatsPerRow
+    const spacing = isSofaRow ? seatSpacing * 1.55 : seatSpacing
     const z = firstRowZ + (row - 1) * rowSpacing
-    const rowWidth = (options.seatsPerRow - 1) * seatSpacing
-    for (let number = 1; number <= options.seatsPerRow; number += 1) {
-      const x = -rowWidth / 2 + (number - 1) * seatSpacing
-      const y = 1.15
+    const rowWidth = (seatsInRow - 1) * spacing
+    // Ряды поднимаются к задней стене — заметные ступени в 3D.
+    const y = 1.15 + (row - 1) * 0.28
+
+    for (let number = 1; number <= seatsInRow; number += 1) {
+      const x = -rowWidth / 2 + (number - 1) * spacing
+      const curve = 0.62 * (1 - Math.pow(x / (rowWidth / 2 || 1), 2))
       seats.push({
         id: `R${row}-S${number}`,
         row,
         number,
         category,
         price: PRICE[category],
-        position: { x, y, z },
+        position: { x, y, z: z + curve },
         lookAt: { x: 0, y: 1.6, z: -11 },
       })
     }
@@ -69,7 +75,7 @@ export function buildRectangularHall(options: {
 export const DEMO_HALL = buildRectangularHall({
   id: 'hall-aurora-1',
   name: 'Зал 1 «Аврора»',
-  rows: 8,
+  rows: 10,
   seatsPerRow: 12,
 })
 

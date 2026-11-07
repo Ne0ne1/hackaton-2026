@@ -1,0 +1,27 @@
+.view-3d{position:relative;margin-top:22px;background:#11120e;overflow:hidden}
+.view-3d>div:first-child{height:470px!important}
+.view-3d canvas{display:block;width:100%!important;height:100%!important}
+.view-3d-status{position:absolute;top:16px;left:18px;display:flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #ffffff25;background:#11130edb;border-radius:6px;font-size:11px;color:#f5f2e7;pointer-events:none;z-index:2}
+.view-3d-status__dot{width:6px;height:6px;border-radius:50%;background:#ff4d2e}
+.view-3d-orbit-hint{position:absolute;top:16px;right:18px;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #ffffff18;background:#11130ecc;border-radius:6px;font-size:10px;color:#c9cbbd;pointer-events:none;z-index:2;max-width:min(300px,48vw)}
+.view-3d-orbit-hint span{color:#ff4d2e;font-size:13px}
+.view-3d-caption{font-size:11px;line-height:1.7;color:#949889;margin:0;padding:13px 20px;background:#181a14}
+.view-3d canvas{cursor:grab}
+.view-3d canvas:active{cursor:grabbing}
+.trailer-disclosure{border-top:1px solid #33352d}
+.trailer-disclosure>summary{display:flex;justify-content:space-between;padding:16px 20px;cursor:pointer;font-size:12px;font-weight:700;list-style:none}
+.trailer-disclosure>summary::-webkit-details-marker{display:none}
+.trailer-disclosure>summary:focus-visible{outline:2px solid #ff4d2e;outline-offset:-3px}
+.trailer-disclosure[open]>summary span{transform:rotate(45deg)}
+.trailer-disclosure .trailer-dock{background:#191b15}
+.trailer-disclosure .trailer-dock__head{display:none}
+.trailer-disclosure .trailer-card{background:#24261e;border-color:#3b3e30}
+.trailer-disclosure .trailer-card--active{border-color:#ff4d2e}
+.trailer-disclosure .trailer-card:after{display:none}
+.trailer-disclosure .trailer-btn--primary{background:#ff4d2e;border-color:#ff4d2e;color:white;box-shadow:none}
+.trailer-disclosure .trailer-btn{background:#303329}
+.trailer-disclosure .trailer-card__title{font-family:inherit;font-size:14px}
+.trailer-disclosure input{accent-color:#ff4d2e}
+@media(max-width:800px){.view-3d>div:first-child{height:390px!important}}
+@media(max-width:800px){.view-3d-orbit-hint{max-width:42vw;font-size:9px;top:12px;right:12px}}
+@media(max-width:540px){.view-3d>div:first-child{height:310px!important}.view-3d-caption{font-size:10px;padding:12px 16px}.view-3d-status{font-size:10px;top:12px;left:12px}.view-3d-orbit-hint{display:none}}
