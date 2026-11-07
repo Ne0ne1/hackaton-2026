@@ -44,3 +44,25 @@
 - Блокеры / вопросы:
   - Подключение к `App.tsx` не выполнялось (зона Cursor) — модуль экспортируется через `src/experience/seatMatch/index.ts` и подключается через `registerExperienceModule` при merge.
   - Скрипт `test` в `package.json` не добавлялся (файл в зоне Cursor) — запуск тестов: `node --experimental-strip-types --test src/experience/seatMatch/seatMatch.test.mjs`.
+
+### 2026-11-07 — SeatMatch: редизайн UI в концепции «Cinematic Luxury»
+
+- Задача Codex / цель: превратить SeatMatch в премиальный киноинтерфейс, сохранив функциональность и алгоритм.
+- Модуль: SeatMatch
+- Статус: done
+- Изменено:
+  - `src/experience/seatMatch/SeatMatch.tsx` — новая визуальная иерархия: eyebrow-заголовок, крупный display-заголовок, пояснение, блок показателей (свободно мест / цена от / зал), настоящий segmented control (`role="radiogroup"` + `role="radio"`, `aria-checked`, roving tabindex, стрелки/Home/End), карточки с «Ряд N · место M» вместо технического ID, человекочитаемым вердиктом качества обзора и шкалой, причинами-«пилюлями», кнопкой «Выбрать место»; пустые состояния переведены на `section` + `aria-live`.
+  - `src/experience/seatMatch/seatMatch.css` — полная переработка оформления: золотистые радиальные/линейные градиенты, тонкие градиентные границы, мягкие световые акценты, ступенчатое появление карточек, hover/press/focus-visible, `prefers-reduced-motion`, адаптив 720 px и 380 px. Только переменные ядра (`--bg`, `--bg-elev`, `--ink`, `--muted`, `--accent`, `--accent-ink`, `--line`, `--vip`/`--comfort`/`--standard`, `--font-display`/`--font-body`), новых цветов нет.
+  - `docs/CLINE_PROGRESS.md` — эта запись.
+- Проверено:
+  - `node --experimental-strip-types --test src/experience/seatMatch/seatMatch.test.mjs` → 12/12 passed, 0 failed, exit 0.
+  - `npm run build` (`tsc --noEmit && vite build`) → exit 0, dist 312.63 kB.
+  - Изоляция стилей: все селекторы в `seatMatch.css` имеют префикс `.seat-match` (плюс `@keyframes`/`@media`/`from`/`to`) — глобальных селекторов нет, другие части приложения не затрагиваются.
+- Контракт:
+  - `seatMatchEngine.ts` не изменялся — алгоритм рекомендации, профили весов и порядок вывода прежние.
+  - `onPickSeat` и `revision` работают как раньше: `revision` остаётся в зависимостях `useMemo` для `getSeatsWithStatus`.
+  - Данные читаются только через `getSeatsWithStatus` / `getHallGeometryForSession` / `getSeatCameraView`; статусы не мутируются, покупка не выполняется.
+  - `src/core/**`, `src/data/**`, `src/types/**`, `src/components/SeatView3D.tsx`, `src/App.tsx`, `src/styles.css`, `package.json`, `docs/TASKS.md`, `docs/DECISIONS.md` не изменялись.
+- Блокеры / вопросы:
+  - Push не выполнялся — ждём разрешения пользователя.
+
