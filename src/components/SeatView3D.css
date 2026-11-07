@@ -1,0 +1,60 @@
+/* SeatView3D — оформление 3D-панели.
+   Подключается из `SeatView3D.tsx`, поэтому правила идут после `styles.css`
+   и переопределяют базовый `.view-3d` (высота, рамка). */
+
+.view-3d {
+  position: relative;
+  height: clamp(320px, 46vh, 520px);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, #1b2620 0%, #0b100e 70%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--accent) 16%, transparent) inset,
+    0 20px 44px -30px rgba(0, 0, 0, 0.95);
+}
+
+.view-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Подпись под сценой — как в дорогих сервисах бронирования. */
+.view-3d-caption {
+  margin: 0;
+  padding: 0.6rem 0.9rem 0.7rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-elev) 92%, transparent) 0%,
+    var(--bg-elev) 100%
+  );
+  border-top: 1px solid var(--line);
+}
+
+/* Нижняя граница панели — тонкая золотая линия, как в премиальных интерфейсах. */
+.view-3d::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent) inset,
+    0 -30px 60px -40px color-mix(in srgb, var(--accent) 70%, transparent) inset;
+}
+
+@media (max-width: 640px) {
+  .view-3d {
+    height: clamp(280px, 42vh, 400px);
+  }
+
+  .view-3d-caption {
+    font-size: 0.78rem;
+    padding: 0.5rem 0.75rem 0.6rem;
+  }
+}
