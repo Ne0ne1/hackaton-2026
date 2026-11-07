@@ -4,7 +4,8 @@
 
 .view-3d {
   position: relative;
-  height: clamp(320px, 46vh, 520px);
+  display: flex;
+  flex-direction: column;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -18,7 +19,11 @@
 .view-3d canvas {
   display: block;
   width: 100% !important;
-  height: 100% !important;
+  height: clamp(280px, 42vh, 480px) !important;
+}
+
+.view-3d--cinema canvas {
+  height: clamp(260px, 38vh, 440px) !important;
 }
 
 /* Подпись под сценой — как в дорогих сервисах бронирования. */
@@ -49,8 +54,12 @@
 }
 
 @media (max-width: 640px) {
-  .view-3d {
-    height: clamp(280px, 42vh, 400px);
+  .view-3d canvas {
+    height: clamp(240px, 38vh, 360px) !important;
+  }
+
+  .view-3d--cinema canvas {
+    height: clamp(220px, 34vh, 320px) !important;
   }
 
   .view-3d-caption {

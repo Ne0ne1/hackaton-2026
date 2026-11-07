@@ -1,11 +1,10 @@
 /**
- * 3D-вид кинозала.
+ * 3D-вид кинозала + интерактивная кинозона трейлеров.
  *
- * Сцена строится из `HallGeometry`: никаких отдельных массивов координат.
- * Геометрия кресла, архитектура, экран и камера вынесены в `src/scene/**`.
+ * Сцена строится из `HallGeometry`. Кинозона — `CinemaLobby` + DOM-контролы.
  */
 import { Canvas } from '@react-three/fiber'
-import { useMemo } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { HallGeometry, SeatCameraView } from '@/types/hall'
 import {
   ACTIVE_TONE,
@@ -18,6 +17,10 @@ import { HALL_COLORS, HallArchitecture } from '@/scene/HallArchitecture'
 import { ScreenPanel } from '@/scene/ScreenPanel'
 import { SeatCameraRig, type OverviewCamera } from '@/scene/SeatCameraRig'
 import { computeHallMetrics, computeSeatPlacements } from '@/scene/hallGeometry'
+import { CinemaLobby } from '@/scene/cinema/CinemaLobby'
+import { TrailerControls } from '@/scene/cinema/TrailerControls'
+import { disposeAllSpatialAudio } from '@/scene/cinema/spatialAudio'
+import { trailerStore } from '@/scene/cinema/trailerStore'
 import './SeatView3D.css'
 
 type Props = {
@@ -26,11 +29,10 @@ type Props = {
   occupiedSeatIds: string[]
 }
 
-/**
- * Общий обзор зала, когда место не выбрано: камера сзади-сверху,
- * смотрящая на экран. Считается из геометрии зала.
- */
-function computeOverview(hall: HallGeometry, metrics: ReturnType<typeof computeHallMetrics>): OverviewCamera {
+function computeOverview(
+  hall: HallGeometry,
+  metrics: ReturnType<typeof computeHallMetrics>,
+): OverviewCamera {
   const back = metrics.backWallZ
   const screen = hall.screen
   return {
@@ -49,16 +51,16 @@ function computeOverview(hall: HallGeometry, metrics: ReturnType<typeof computeH
 }
 
 export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [zoneActive, setZoneActive] = useState(true)
   const metrics = useMemo(() => computeHallMetrics(hall), [hall])
   const placements = useMemo(
     () => computeSeatPlacements(hall, metrics),
     [hall, metrics],
   )
   const overview = useMemo(() => computeOverview(hall, metrics), [hall, metrics])
-
   const occupied = useMemo(() => new Set(occupiedSeatIds), [occupiedSeatIds])
 
-  // Спецификации для инстансинга: цвет зависит от категории, статуса и выбора.
   const seatSpecs = useMemo<SeatInstanceSpec[]>(
     () =>
       placements.map((placement) => {
@@ -80,24 +82,59 @@ export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
     [placements, occupied, cameraView?.seatId],
   )
 
+  useEffect(() => {
+    const node = rootRef.current
+    if (!node) return
+
+    const syncZone = (intersecting: boolean) => {
+      const active =
+        intersecting && document.visibilityState === 'visible'
+      setZoneActive(active)
+      if (!active) trailerStore.pauseActive()
+    }
+
+    const io = new IntersectionObserver(
+      ([entry]) => syncZone(entry.isIntersecting),
+      { threshold: 0.15 },
+    )
+    io.observe(node)
+
+    const onVis = () => {
+      const rect = node.getBoundingClientRect()
+      const inView =
+        rect.bottom > 0 &&
+        rect.top < window.innerHeight &&
+        rect.right > 0 &&
+        rect.left < window.innerWidth
+      syncZone(inView)
+    }
+    document.addEventListener('visibilitychange', onVis)
+
+    return () => {
+      io.disconnect()
+      document.removeEventListener('visibilitychange', onVis)
+      disposeAllSpatialAudio()
+    }
+  }, [])
+
   return (
-    <div className="view-3d" aria-label="3D-вид с места">
+    <div
+      ref={rootRef}
+      className="view-3d view-3d--cinema"
+      aria-label="3D-вид с места и кинозона"
+    >
       <Canvas
         shadows
         dpr={[1, 1.75]}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         camera={{ fov: 62, near: 0.1, far: 120 }}
+        onPointerMissed={() => undefined}
       >
-        {/* Фон зала — глубокий графитово-зелёный. */}
         <color attach="background" args={['#0b100e']} />
         <fog attach="fog" args={['#0b100e', 16, 42]} />
 
-        {/* ---------- Свет ---------- */}
-        {/* Мягский общий ambient — зал не проваливается в темноту. */}
         <ambientLight intensity={0.62} color="#b8c9be" />
-        {/* Заполняющий hemispheric: сверху холоднее, снизу теплее. */}
         <hemisphereLight args={['#6f8d7c', '#3a2f1f', 1.05]} />
-        {/* Основной направленный источник — мягкие тени от кресел. */}
         <directionalLight
           position={[4.5, 7.5, 3]}
           intensity={0.7}
@@ -112,18 +149,17 @@ export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
           shadow-camera-far={32}
           shadow-bias={-0.0006}
         />
-        {/* Заполняющий источник сзади — чтобы дальние ряды не тонули в темноте. */}
         <directionalLight position={[0, 4.2, 6]} intensity={0.42} color="#b9cbc0" />
-        {/* Тёплый акцент сверху-сзади — «софиты» премиального зала. */}
         <directionalLight position={[-6, 5.5, 6]} intensity={0.55} color="#e2c48a" />
 
-        {/* ---------- Сцена ---------- */}
         <SeatCameraRig view={cameraView} overview={overview} />
         <HallArchitecture metrics={metrics} placements={placements} />
         <ScreenPanel hall={hall} />
         <CinemaSeats seats={seatSpecs} />
+        <Suspense fallback={null}>
+          <CinemaLobby metrics={metrics} zoneActive={zoneActive} />
+        </Suspense>
 
-        {/* Подсветка выбранного места — мягкий золотой ореол. */}
         {cameraView && (
           <mesh
             position={[
@@ -143,21 +179,22 @@ export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
           </mesh>
         )}
       </Canvas>
+
       <p className="view-3d-caption">
         {cameraView
-          ? `Вид с места: ряд ${seatRowLabel(hall, cameraView.seatId)}, место ${seatNumberLabel(hall, cameraView.seatId)}`
-          : 'Обзор зала — выберите место, чтобы увидеть экран'}
+          ? `Вид с места: ряд ${seatRowLabel(hall, cameraView.seatId)}, место ${seatNumberLabel(hall, cameraView.seatId)} · клик по боковым экранам — трейлеры`
+          : 'Обзор зала — боковые экраны: Sintel и Big Buck Bunny'}
       </p>
+
+      <TrailerControls visible />
     </div>
   )
 }
 
-/** Номер ряда по id места (`R3-S5`). */
 function seatRowLabel(hall: HallGeometry, seatId: string): number | string {
   return hall.seats.find((s) => s.id === seatId)?.row ?? '—'
 }
 
-/** Номер места по id места (`R3-S5`). */
 function seatNumberLabel(hall: HallGeometry, seatId: string): number | string {
   return hall.seats.find((s) => s.id === seatId)?.number ?? '—'
 }
