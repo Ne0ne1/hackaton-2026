@@ -13,27 +13,31 @@ type Props = {
 }
 
 export function CinemaLobby({ metrics, zoneActive }: Props) {
-  const midZ = (metrics.minZ + metrics.maxZ) * 0.45
-  const panelY = metrics.floorY + 1.55
+  const panelZ = metrics.frontWallZ + Math.min(metrics.depth * 0.34, 5.1)
+  const panelY = metrics.floorY + 1.82
   // Чуть внутри боковых стен (HallArchitecture: minX - wallMarginX).
   const leftX = metrics.minX - metrics.wallMarginX + 0.12
   const rightX = metrics.maxX + metrics.wallMarginX - 0.12
 
-  const left: [number, number, number] = [leftX, panelY, midZ]
-  const right: [number, number, number] = [rightX, panelY, midZ]
+  const left: [number, number, number] = [leftX, panelY, panelZ]
+  const right: [number, number, number] = [rightX, panelY, panelZ]
 
   return (
     <group name="cinema-lobby">
       <TrailerPanel3D
         film={FILMS[0]}
         position={left}
-        rotationY={Math.PI / 2}
+        rotationY={Math.PI / 2 - 0.23}
+        width={2.75}
+        height={1.55}
         zoneActive={zoneActive}
       />
       <TrailerPanel3D
         film={FILMS[1]}
         position={right}
-        rotationY={-Math.PI / 2}
+        rotationY={-Math.PI / 2 + 0.23}
+        width={2.75}
+        height={1.55}
         zoneActive={zoneActive}
       />
     </group>

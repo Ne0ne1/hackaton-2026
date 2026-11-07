@@ -22,7 +22,7 @@ export const SEAT_WIDTH = 0.56
 export const AISLE_WIDTH = 1.15
 
 /** Высота потолка над полом, м. */
-export const CEILING_HEIGHT = 3.4
+export const CEILING_HEIGHT = 5.6
 
 export type HallMetrics = {
   /** Уровень пола (в демо-зале 0). */
@@ -204,7 +204,7 @@ export function computeSeatPlacements(
     const baseY = seat.position.y - SEATED_EYE_HEIGHT
     const dx = metrics.screenCenter.x - seat.position.x
     const dz = metrics.screenCenter.z - seat.position.z
-    const rotationY = Math.atan2(dx, -dz) * 0.12
+    const rotationY = Math.atan2(-dx, -dz) * 0.35
 
     return {
       seat,

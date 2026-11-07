@@ -1,69 +1,27 @@
-/* SeatView3D — оформление 3D-панели.
-   Подключается из `SeatView3D.tsx`, поэтому правила идут после `styles.css`
-   и переопределяют базовый `.view-3d` (высота, рамка). */
-
-.view-3d {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 0%, #1b2620 0%, #0b100e 70%);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--accent) 16%, transparent) inset,
-    0 20px 44px -30px rgba(0, 0, 0, 0.95);
-}
-
-.view-3d canvas {
-  display: block;
-  width: 100% !important;
-  height: clamp(280px, 42vh, 480px) !important;
-}
-
-.view-3d--cinema canvas {
-  height: clamp(260px, 38vh, 440px) !important;
-}
-
-/* Подпись под сценой — как в дорогих сервисах бронирования. */
-.view-3d-caption {
-  margin: 0;
-  padding: 0.6rem 0.9rem 0.7rem;
-  font-size: 0.82rem;
-  letter-spacing: 0.01em;
-  color: var(--muted);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--bg-elev) 92%, transparent) 0%,
-    var(--bg-elev) 100%
-  );
-  border-top: 1px solid var(--line);
-}
-
-/* Нижняя граница панели — тонкая золотая линия, как в премиальных интерфейсах. */
-.view-3d::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent) inset,
-    0 -30px 60px -40px color-mix(in srgb, var(--accent) 70%, transparent) inset;
-}
-
-@media (max-width: 640px) {
-  .view-3d canvas {
-    height: clamp(240px, 38vh, 360px) !important;
-  }
-
-  .view-3d--cinema canvas {
-    height: clamp(220px, 34vh, 320px) !important;
-  }
-
-  .view-3d-caption {
-    font-size: 0.78rem;
-    padding: 0.5rem 0.75rem 0.6rem;
-  }
-}
+.view-3d{position:relative;margin-top:22px;background:#11120e;overflow:hidden}
+.view-3d>div:first-child{height:470px!important}
+.view-3d canvas{display:block;width:100%!important;height:100%!important}
+.view-3d-status{position:absolute;top:16px;left:18px;display:flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #ffffff25;background:#11130edb;border-radius:6px;font-size:11px;color:#f5f2e7;pointer-events:none;z-index:2}
+.view-3d-status__dot{width:6px;height:6px;border-radius:50%;background:#ff4d2e}
+.view-3d-orbit-hint{position:absolute;top:16px;right:18px;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #ffffff18;background:#11130ecc;border-radius:6px;font-size:10px;color:#c9cbbd;pointer-events:none;z-index:2;max-width:min(300px,48vw)}
+.view-3d-orbit-hint span{color:#ff4d2e;font-size:13px}
+.view-3d-caption{font-size:11px;line-height:1.7;color:#949889;margin:0;padding:13px 20px;background:#181a14}
+.view-3d canvas{cursor:grab}
+.view-3d canvas:active{cursor:grabbing}
+.trailer-disclosure{border-top:1px solid #33352d}
+.trailer-disclosure>summary{display:flex;justify-content:space-between;padding:16px 20px;cursor:pointer;font-size:12px;font-weight:700;list-style:none}
+.trailer-disclosure>summary::-webkit-details-marker{display:none}
+.trailer-disclosure>summary:focus-visible{outline:2px solid #ff4d2e;outline-offset:-3px}
+.trailer-disclosure[open]>summary span{transform:rotate(45deg)}
+.trailer-disclosure .trailer-dock{background:#191b15}
+.trailer-disclosure .trailer-dock__head{display:none}
+.trailer-disclosure .trailer-card{background:#24261e;border-color:#3b3e30}
+.trailer-disclosure .trailer-card--active{border-color:#ff4d2e}
+.trailer-disclosure .trailer-card:after{display:none}
+.trailer-disclosure .trailer-btn--primary{background:#ff4d2e;border-color:#ff4d2e;color:white;box-shadow:none}
+.trailer-disclosure .trailer-btn{background:#303329}
+.trailer-disclosure .trailer-card__title{font-family:inherit;font-size:14px}
+.trailer-disclosure input{accent-color:#ff4d2e}
+@media(max-width:800px){.view-3d>div:first-child{height:390px!important}}
+@media(max-width:800px){.view-3d-orbit-hint{max-width:42vw;font-size:9px;top:12px;right:12px}}
+@media(max-width:540px){.view-3d>div:first-child{height:310px!important}.view-3d-caption{font-size:10px;padding:12px 16px}.view-3d-status{font-size:10px;top:12px;left:12px}.view-3d-orbit-hint{display:none}}

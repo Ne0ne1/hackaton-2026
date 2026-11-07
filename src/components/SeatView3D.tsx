@@ -1,10 +1,11 @@
 /**
  * 3D-вид кинозала + интерактивная кинозона трейлеров.
- *
- * Сцена строится из `HallGeometry`. Кинозона — `CinemaLobby` + DOM-контролы.
+ * Сцена из HallGeometry. Осмотр — CameraControls (мышь/тач).
  */
+import { AdaptiveDpr } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import * as THREE from 'three'
 import type { HallGeometry, SeatCameraView } from '@/types/hall'
 import {
   ACTIVE_TONE,
@@ -37,22 +38,23 @@ function computeOverview(
   const screen = hall.screen
   return {
     position: {
-      x: screen.position.x,
-      y: metrics.floorY + 2.9,
-      z: back - 0.6,
+      x: screen.position.x + 1.2,
+      y: metrics.floorY + 3.8,
+      z: back - 0.2,
     },
     target: {
       x: screen.position.x,
-      y: screen.position.y * 0.85,
-      z: screen.position.z,
+      y: screen.position.y * 0.75,
+      z: screen.position.z + 2,
     },
-    fov: 62,
+    fov: 58,
   }
 }
 
 export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [zoneActive, setZoneActive] = useState(true)
+  const [reducedMotion, setReducedMotion] = useState(false)
   const metrics = useMemo(() => computeHallMetrics(hall), [hall])
   const placements = useMemo(
     () => computeSeatPlacements(hall, metrics),
@@ -77,25 +79,34 @@ export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
           position: [placement.base.x, placement.base.y, placement.base.z],
           rotationY: placement.rotationY,
           tone,
+          wide: placement.category === 'vip',
+          occupied: isSold,
         }
       }),
     [placements, occupied, cameraView?.seatId],
   )
 
   useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const syncMotion = () => setReducedMotion(media.matches)
+    syncMotion()
+    media.addEventListener('change', syncMotion)
+    return () => media.removeEventListener('change', syncMotion)
+  }, [])
+
+  useEffect(() => {
     const node = rootRef.current
     if (!node) return
 
     const syncZone = (intersecting: boolean) => {
-      const active =
-        intersecting && document.visibilityState === 'visible'
+      const active = intersecting && document.visibilityState === 'visible'
       setZoneActive(active)
       if (!active) trailerStore.pauseActive()
     }
 
     const io = new IntersectionObserver(
       ([entry]) => syncZone(entry.isIntersecting),
-      { threshold: 0.15 },
+      { threshold: 0.01 },
     )
     io.observe(node)
 
@@ -113,6 +124,7 @@ export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
     return () => {
       io.disconnect()
       document.removeEventListener('visibilitychange', onVis)
+      trailerStore.pauseActive()
       disposeAllSpatialAudio()
     }
   }, [])
@@ -126,36 +138,46 @@ export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
       <Canvas
         shadows
         dpr={[1, 1.75]}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-        camera={{ fov: 62, near: 0.1, far: 120 }}
-        onPointerMissed={() => undefined}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: 'high-performance',
+          preserveDrawingBuffer: false,
+        }}
+        camera={{ fov: 58, near: 0.08, far: 140 }}
+        onCreated={({ gl }) => {
+          gl.outputColorSpace = THREE.SRGBColorSpace
+          gl.toneMapping = THREE.ACESFilmicToneMapping
+          gl.toneMappingExposure = 1.28
+          gl.shadowMap.type = THREE.PCFSoftShadowMap
+        }}
       >
-        <color attach="background" args={['#0b100e']} />
-        <fog attach="fog" args={['#0b100e', 16, 42]} />
+        <color attach="background" args={['#141510']} />
+        <fog attach="fog" args={['#141510', 22, 52]} />
 
-        <ambientLight intensity={0.62} color="#b8c9be" />
-        <hemisphereLight args={['#6f8d7c', '#3a2f1f', 1.05]} />
+        <ambientLight intensity={0.72} color="#ebe9dc" />
+        <hemisphereLight args={['#e8e9df', '#22241c', 1.15]} />
         <directionalLight
-          position={[4.5, 7.5, 3]}
-          intensity={0.7}
-          color="#cfe0d6"
+          position={[5.5, 8.2, 2]}
+          intensity={1.45}
+          color="#f7f2e4"
           castShadow
-          shadow-mapSize={[1024, 1024]}
-          shadow-camera-left={-14}
-          shadow-camera-right={14}
-          shadow-camera-top={14}
-          shadow-camera-bottom={-14}
+          shadow-mapSize={[1536, 1536]}
+          shadow-camera-left={-16}
+          shadow-camera-right={16}
+          shadow-camera-top={16}
+          shadow-camera-bottom={-16}
           shadow-camera-near={0.5}
-          shadow-camera-far={32}
-          shadow-bias={-0.0006}
+          shadow-camera-far={36}
+          shadow-bias={-0.0005}
         />
-        <directionalLight position={[0, 4.2, 6]} intensity={0.42} color="#b9cbc0" />
-        <directionalLight position={[-6, 5.5, 6]} intensity={0.55} color="#e2c48a" />
+        <directionalLight position={[-3.5, 5.5, -7]} intensity={1.25} color="#ffe6d2" />
+        <directionalLight position={[0, 4, 7]} intensity={0.55} color="#d5dece" />
 
-        <SeatCameraRig view={cameraView} overview={overview} />
+        <SeatCameraRig view={cameraView} overview={overview} instant={reducedMotion} />
         <HallArchitecture metrics={metrics} placements={placements} />
         <ScreenPanel hall={hall} />
-        <CinemaSeats seats={seatSpecs} />
+        <CinemaSeats seats={seatSpecs} activeSeatId={cameraView?.seatId} />
         <Suspense fallback={null}>
           <CinemaLobby metrics={metrics} zoneActive={zoneActive} />
         </Suspense>
@@ -164,29 +186,49 @@ export function SeatView3D({ hall, cameraView, occupiedSeatIds }: Props) {
           <mesh
             position={[
               cameraView.position.x,
-              metrics.floorY + 0.02,
+              metrics.floorY + 0.025,
               cameraView.position.z,
             ]}
             rotation={[-Math.PI / 2, 0, 0]}
           >
-            <ringGeometry args={[0.34, 0.52, 32]} />
+            <ringGeometry args={[0.32, 0.5, 40]} />
             <meshBasicMaterial
               color={HALL_COLORS.gold}
               transparent
-              opacity={0.5}
+              opacity={0.55}
               toneMapped={false}
             />
           </mesh>
         )}
+        <AdaptiveDpr />
       </Canvas>
+
+      <div className="view-3d-status" aria-live="polite">
+        <span className="view-3d-status__dot" />
+        {cameraView
+          ? `Ряд ${seatRowLabel(hall, cameraView.seatId)} · место ${seatNumberLabel(hall, cameraView.seatId)}`
+          : 'Панорамный обзор'}
+      </div>
+
+      <div className="view-3d-orbit-hint" aria-hidden>
+        <span>⟲</span>
+        {cameraView
+          ? 'Медленно тяните мышью — как будто поворачиваете голову'
+          : 'Тяните мышью, чтобы крутить зал · колёсико — приблизить'}
+      </div>
 
       <p className="view-3d-caption">
         {cameraView
-          ? `Вид с места: ряд ${seatRowLabel(hall, cameraView.seatId)}, место ${seatNumberLabel(hall, cameraView.seatId)} · клик по боковым экранам — трейлеры`
-          : 'Обзор зала — боковые экраны: Sintel и Big Buck Bunny'}
+          ? 'Так выглядит экран с вашего места. Осмотритесь мышью или пересестьте стрелками.'
+          : 'Обзор зала. Выберите кресло на схеме — затем осмотритесь из него.'}
       </p>
 
-      <TrailerControls visible />
+      <details className="trailer-disclosure">
+        <summary>
+          Трейлеры и звук с места <span>＋</span>
+        </summary>
+        <TrailerControls visible />
+      </details>
     </div>
   )
 }

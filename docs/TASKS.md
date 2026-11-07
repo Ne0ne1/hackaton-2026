@@ -20,6 +20,7 @@
 
 | ID | Статус | Исполнитель | Задача | Файлы | Проверки |
 |----|--------|-------------|--------|-------|----------|
+| T-011 | done | cursor | Тёмный билетный UI + 3D с поворотом головы и зрителями | `App`, `SeatMap`, `styles`, `hallApi`, `demoHall`, `SeatView3D`, `src/scene/**` | `npm run build`; 14/14; head-look + audience |
 | T-001 | done | cursor | Подготовить протокол совместной работы агентов, без конкурсного продукта | `AGENTS.md`, `.cursor/rules/agent-routing.mdc`, `.cursor/rules/shared-context.mdc`, `docs/TASKS.md`, `docs/DECISIONS.md`, `scripts/run-codex.sh` | `zsh -n scripts/run-codex.sh`; отдельных тестов проекта нет |
 | T-002 | done | cursor | Безопасная диагностика готовности, без запуска Codex и без установки программ | `docs/TASKS.md` | `zsh -n scripts/run-codex.sh`; `codex --version`; `codex login status`; `git --version`; `node --version` |
 | T-003 | done | cursor | Создать GitHub-репозиторий и залить текущий каркас | `.gitignore`, `docs/TASKS.md`, `docs/DECISIONS.md`, git remote | `gh repo view Ne0ne1/hackaton-2026`; `git status` |

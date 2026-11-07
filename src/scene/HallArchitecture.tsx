@@ -1,251 +1,196 @@
-/**
- * Архитектура кинозала: пол, боковые и задняя стены, потолок, передняя стена
- * с акустическими панелями и мягкой подсветкой проходов.
- *
- * Все размеры берутся из `HallMetrics`, который вычислен из `HallGeometry`.
- */
 import { useMemo } from 'react'
 import { CEILING_HEIGHT, type HallMetrics, type SeatPlacement } from './hallGeometry'
 
-/** Цветовая палитра зала — глубокие зелёные и графитовые тона. */
-export const HALL_COLORS = {
-  floor: '#141b18',
-  floorCarpet: '#1b2620',
-  wall: '#1a2320',
-  wallLower: '#131a17',
-  ceiling: '#0f1512',
-  panel: '#243029',
-  trim: '#3c4a41',
-  gold: '#c4a35a',
-  aisleLight: '#d8b978',
-}
+export const HALL_COLORS = { gold: '#ff4d2e' }
 
-type Props = {
+export function HallArchitecture({
+  metrics: m,
+  placements = [],
+}: {
   metrics: HallMetrics
-  /** Расстановка кресел — нужна для построения ступеней рядов. */
   placements?: SeatPlacement[]
-}
+}) {
+  const centerZ = (m.frontWallZ + m.backWallZ) / 2
+  const centerX = (m.minX + m.maxX) / 2
 
-export function HallArchitecture({ metrics, placements = [] }: Props) {
-  // Подиумы рядов: если места в ряду стоят выше базового пола,
-  // под ним делается ступень. Полностью выводится из данных зала.
-  const risers = useMemo(() => {
-    const byRow = new Map<
-      number,
-      { row: number; height: number; z: number; minX: number; maxX: number }
-    >()
-    for (const placement of placements) {
-      const height = placement.riserHeight
-      if (height <= 0.001) continue
-      const row = placement.seat.row
-      const existing = byRow.get(row)
-      if (existing) {
-        existing.height = Math.max(existing.height, height)
-        existing.minX = Math.min(existing.minX, placement.base.x)
-        existing.maxX = Math.max(existing.maxX, placement.base.x)
-      } else {
-        byRow.set(row, {
-          row,
-          height,
-          z: placement.base.z,
-          minX: placement.base.x,
-          maxX: placement.base.x,
+  const rows = useMemo(() => {
+    const result = new Map<number, { z: number; height: number; depth: number }>()
+    for (const p of placements) {
+      const existing = result.get(p.seat.row)
+      if (!existing) {
+        result.set(p.seat.row, {
+          z: p.base.z,
+          height: p.riserHeight,
+          depth: 1.05,
         })
+      } else {
+        existing.z = Math.min(existing.z, p.base.z)
+        existing.height = Math.max(existing.height, p.riserHeight)
       }
     }
-    return [...byRow.values()]
-      .sort((a, b) => a.z - b.z)
-      .map((riser) => ({
-        row: riser.row,
-        height: riser.height,
-        z: riser.z,
-        depth: 1.0,
-      }))
+    return [...result.entries()]
+      .sort((a, b) => a[1].z - b[1].z)
+      .map(([row, data]) => ({ row, ...data }))
   }, [placements])
-  const {
-    floorY,
-    minX,
-    maxX,
-    frontWallZ,
-    backWallZ,
-    wallMarginX,
-    width,
-    depth,
-    aisleXs,
-    aisleRadius,
-  } = metrics
-
-  const wallHeight = CEILING_HEIGHT
-  const leftWallX = minX - wallMarginX
-  const rightWallX = maxX + wallMarginX
-  const centerX = (leftWallX + rightWallX) / 2
-  const centerZ = (frontWallZ + backWallZ) / 2
-
-  // Акустические панели на боковых стенах — вертикальные полосы.
-  const panels = useMemo(() => {
-    const count = 14
-    const result: { z: number }[] = []
-    const usableDepth = backWallZ - frontWallZ - 1.2
-    for (let i = 0; i < count; i += 1) {
-      const t = (i + 0.5) / count
-      result.push({ z: frontWallZ + 0.6 + t * usableDepth })
-    }
-    return result
-  }, [frontWallZ, backWallZ])
 
   return (
-    <group>
-      {/* ---------- Пол ---------- */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[centerX, floorY, centerZ]}
-        receiveShadow
-      >
-        <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial color={HALL_COLORS.floor} roughness={0.95} metalness={0.02} />
+    <group name="hall-architecture">
+      {/* Пол-ковёр */}
+      <mesh position={[centerX, m.floorY - 0.08, centerZ]} receiveShadow>
+        <boxGeometry args={[m.width, 0.16, m.depth]} />
+        <meshStandardMaterial color="#1f201a" roughness={0.98} />
+      </mesh>
+      <mesh position={[centerX, m.floorY + 0.005, centerZ]} receiveShadow>
+        <boxGeometry args={[m.width - 0.8, 0.01, m.depth - 0.6]} />
+        <meshStandardMaterial color="#26271f" roughness={1} />
       </mesh>
 
-      {/* Ковровое покрытие зоны seating. */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[centerX, floorY + 0.005, centerZ]}
-        receiveShadow
-      >
-        <planeGeometry args={[width - 2 * wallMarginX * 0.6, depth * 0.86]} />
-        <meshStandardMaterial
-          color={HALL_COLORS.floorCarpet}
-          roughness={1}
-          metalness={0}
-        />
-      </mesh>
-
-      {/* ---------- Боковые стены ---------- */}
-      {[
-        { x: leftWallX, ry: Math.PI / 2 },
-        { x: rightWallX, ry: -Math.PI / 2 },
-      ].map((wall) => (
-        <group key={wall.x} position={[wall.x, floorY, centerZ]} rotation={[0, wall.ry, 0]}>
-          <mesh position={[0, wallHeight / 2, 0]} receiveShadow>
-            <planeGeometry args={[depth, wallHeight]} />
-            <meshStandardMaterial color={HALL_COLORS.wall} roughness={0.9} metalness={0.03} />
-          </mesh>
-          {/* Нижняя панель — более тёмная, как в дорогих залах. */}
-          <mesh position={[0, 0.45, 0.03]} receiveShadow>
-            <planeGeometry args={[depth, 0.9]} />
-            <meshStandardMaterial color={HALL_COLORS.wallLower} roughness={0.85} />
-          </mesh>
-          {/* Декоративная полоса с золотым отливом. */}
-          <mesh position={[0, 0.92, 0.04]}>
-            <planeGeometry args={[depth, 0.05]} />
-            <meshStandardMaterial
-              color={HALL_COLORS.trim}
-              roughness={0.5}
-              metalness={0.35}
-              emissive={HALL_COLORS.gold}
-              emissiveIntensity={0.06}
-            />
-          </mesh>
-        </group>
-      ))}
-
-      {/* ---------- Задняя стена ---------- */}
-      <mesh
-        position={[centerX, floorY + wallHeight / 2, backWallZ]}
-        rotation={[0, Math.PI, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[width, wallHeight]} />
-        <meshStandardMaterial color={HALL_COLORS.wall} roughness={0.92} />
-      </mesh>
-
-      {/* ---------- Передняя стена (за экраном) ---------- */}
-      <mesh
-        position={[centerX, floorY + wallHeight / 2, frontWallZ]}
-        receiveShadow
-      >
-        <planeGeometry args={[width, wallHeight]} />
-        <meshStandardMaterial color={HALL_COLORS.wallLower} roughness={0.94} />
-      </mesh>
-
-      {/* ---------- Потолок ---------- */}
-      <mesh
-        rotation={[Math.PI / 2, 0, 0]}
-        position={[centerX, floorY + wallHeight, centerZ]}
-      >
-        <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial color={HALL_COLORS.ceiling} roughness={0.95} />
-      </mesh>
-
-      {/* ---------- Акустические панели на боковых стенах ---------- */}
-      {panels.map((panel, i) => (
-        <group key={panel.z}>
-          {[
-            { x: leftWallX + 0.06, ry: Math.PI / 2 },
-            { x: rightWallX - 0.06, ry: -Math.PI / 2 },
-          ].map((wall) => (
+      {/* Ступени рядов */}
+      {rows
+        .filter((row) => row.height > 0.02)
+        .map((row) => (
+          <group key={row.row}>
             <mesh
-              key={`${wall.x}-${i}`}
-              position={[wall.x, floorY + wallHeight * 0.52, panel.z]}
-              rotation={[0, wall.ry, 0]}
+              position={[centerX, m.floorY + row.height / 2, row.z + 0.28]}
               receiveShadow
+              castShadow
             >
-              <boxGeometry args={[0.14, wallHeight * 0.52, 0.12]} />
-              <meshStandardMaterial color={HALL_COLORS.panel} roughness={0.94} />
+              <boxGeometry args={[m.width - 0.7, row.height, 1.08]} />
+              <meshStandardMaterial color="#23241e" roughness={0.96} />
+            </mesh>
+            <mesh position={[centerX, m.floorY + row.height + 0.01, row.z - 0.22]}>
+              <boxGeometry args={[m.width - 1.1, 0.02, 0.04]} />
+              <meshStandardMaterial color="#303128" roughness={0.8} />
+            </mesh>
+            {[-1, 1].map((side) => (
+              <mesh
+                key={side}
+                position={[
+                  centerX + side * (m.width / 2 - 0.7),
+                  m.floorY + row.height + 0.03,
+                  row.z - 0.15,
+                ]}
+              >
+                <boxGeometry args={[0.28, 0.03, 0.04]} />
+                <meshBasicMaterial color="#ff6240" toneMapped={false} />
+              </mesh>
+            ))}
+          </group>
+        ))}
+
+      {/* Боковые стены + акустика */}
+      {[-1, 1].map((side) => (
+        <group key={side}>
+          <mesh
+            position={[centerX + side * (m.width / 2), m.floorY + CEILING_HEIGHT / 2, centerZ]}
+            receiveShadow
+          >
+            <boxGeometry args={[0.22, CEILING_HEIGHT, m.depth]} />
+            <meshStandardMaterial color="#2c2d26" roughness={0.94} />
+          </mesh>
+          {Array.from({ length: 12 }, (_, i) => (
+            <mesh
+              key={i}
+              position={[
+                centerX + side * (m.width / 2 - 0.14),
+                m.floorY + CEILING_HEIGHT / 2,
+                m.frontWallZ + ((i + 0.5) * m.depth) / 12,
+              ]}
+            >
+              <boxGeometry args={[0.06, CEILING_HEIGHT - 0.55, m.depth / 12 - 0.08]} />
+              <meshStandardMaterial
+                color={i % 2 ? '#38392f' : '#2f3028'}
+                roughness={0.92}
+              />
             </mesh>
           ))}
+          {/* Оранжевая линия прохода */}
+          <mesh
+            position={[
+              centerX + side * (m.width / 2 - 0.18),
+              m.floorY + 0.11,
+              centerZ,
+            ]}
+          >
+            <boxGeometry args={[0.045, 0.04, m.depth - 0.5]} />
+            <meshBasicMaterial color="#ff4d2e" toneMapped={false} />
+          </mesh>
+          {/* Мягкая подсветка прохода */}
+          <pointLight
+            position={[
+              centerX + side * (m.width / 2 - 0.55),
+              m.floorY + 0.45,
+              centerZ,
+            ]}
+            color="#ff7a55"
+            intensity={3.4}
+            distance={10}
+            decay={2}
+          />
         </group>
       ))}
 
-      {/* ---------- Ступени (подиум рядов) ---------- */}
-      {risers.map((riser) => (
+      {/* Потолок + полосы света */}
+      <mesh position={[centerX, m.floorY + CEILING_HEIGHT, centerZ]}>
+        <boxGeometry args={[m.width, 0.18, m.depth]} />
+        <meshStandardMaterial color="#181912" roughness={1} />
+      </mesh>
+      {Array.from({ length: 5 }, (_, i) => {
+        const z = m.frontWallZ + ((i + 1) * m.depth) / 6
+        return (
+          <group key={i}>
+            <mesh position={[centerX, m.floorY + CEILING_HEIGHT - 0.08, z]}>
+              <boxGeometry args={[m.width * 0.72, 0.04, 0.12]} />
+              <meshStandardMaterial
+                color="#f2efe2"
+                emissive="#f0ecdc"
+                emissiveIntensity={0.35}
+                roughness={0.4}
+              />
+            </mesh>
+            <pointLight
+              position={[centerX, m.floorY + CEILING_HEIGHT - 0.55, z]}
+              intensity={4.2}
+              distance={14}
+              decay={2}
+              color="#fff4df"
+            />
+          </group>
+        )
+      })}
+
+      {/* Передняя / задняя стены */}
+      {[m.frontWallZ, m.backWallZ].map((z) => (
         <mesh
-          key={`riser-${riser.row}`}
-          position={[centerX, floorY + riser.height / 2, riser.z]}
+          key={z}
+          position={[centerX, m.floorY + CEILING_HEIGHT / 2, z]}
           receiveShadow
         >
-          <boxGeometry args={[width - 2 * wallMarginX * 0.5, riser.height, riser.depth]} />
-          <meshStandardMaterial color={HALL_COLORS.floorCarpet} roughness={0.98} />
+          <boxGeometry args={[m.width, CEILING_HEIGHT, 0.14]} />
+          <meshStandardMaterial color="#141510" roughness={1} />
         </mesh>
       ))}
 
-      {/* ---------- Подсветка проходов ---------- */}
-      {aisleXs.map((x) => (
-        <group key={x}>
-          {/* Светящаяся полоса вдоль прохода. */}
-          <mesh
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[x, floorY + 0.012, centerZ]}
-          >
-            <planeGeometry args={[aisleRadius * 0.5, depth * 0.8]} />
-            <meshStandardMaterial
-              color={HALL_COLORS.aisleLight}
-              emissive={HALL_COLORS.aisleLight}
-              emissiveIntensity={0.35}
-              roughness={0.6}
-              transparent
-              opacity={0.5}
-            />
+      {/* Колонны у экрана */}
+      {[-1, 1].map((side) => (
+        <group
+          key={side}
+          position={[
+            centerX + side * (m.width / 2 - 0.45),
+            m.floorY + 2.7,
+            m.frontWallZ + 1.4,
+          ]}
+        >
+          <mesh castShadow>
+            <boxGeometry args={[0.38, 4.2, 0.38]} />
+            <meshStandardMaterial color="#1a1b16" roughness={0.88} />
           </mesh>
-          {/* Точечные «лампочки» по длине прохода — мягкий тёплый свет. */}
-          {Array.from({ length: 5 }).map((_, i) => {
-            const t = (i + 0.5) / 5
-            const z = frontWallZ + 0.8 + t * (backWallZ - frontWallZ - 1.6)
-            return (
-              <pointLight
-                key={i}
-                ref={(node) => {
-                  if (node) node.position.set(x, floorY + 0.35, z)
-                }}
-                color={HALL_COLORS.aisleLight}
-                intensity={0.5}
-                distance={2.6}
-                decay={2}
-              />
-            )
-          })}
+          <mesh position={[0, 1.6, 0.2]}>
+            <boxGeometry args={[0.42, 0.08, 0.08]} />
+            <meshBasicMaterial color="#ff4d2e" toneMapped={false} />
+          </mesh>
         </group>
       ))}
     </group>
   )
 }
-

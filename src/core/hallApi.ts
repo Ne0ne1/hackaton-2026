@@ -58,7 +58,11 @@ export function getSeat(sessionId: string, seatId: string): SeatWithStatus | und
   return getSeatsWithStatus(sessionId).find((s) => s.id === seatId)
 }
 
-/** Камера с высоты глаз на кресле, смотрит в центр экрана. */
+/**
+ * Камера с высоты глаз на кресле.
+ * FOV и лёгкий сдвиг цели зависят от ряда и бокового смещения —
+ * спереди экран крупный и «в лоб», сзади мельче, сбоку — заметный угол.
+ */
 export function getSeatCameraView(
   sessionId: string,
   seatId: string,
@@ -67,15 +71,34 @@ export function getSeatCameraView(
   const seat = hall?.seats.find((s) => s.id === seatId)
   if (!hall || !seat) return undefined
 
+  const screen = hall.screen
+  const dx = seat.position.x - screen.position.x
+  const dz = seat.position.z - screen.position.z
+  const dist = Math.hypot(dx, dz)
+  const near = 5.2
+  const far = 15.5
+  const depthT = Math.min(1, Math.max(0, (dist - near) / (far - near)))
+  const sideT = Math.min(1, Math.abs(dx) / Math.max(screen.width * 0.42, 1))
+
+  // Спереди экран крупный и «ломает» кадр; сзади — мельче; сбоку шире угол.
+  const fov = 78 - depthT * 28 + sideT * 6
+
+  // С первого ряда смотрим вверх; с последнего — чуть ниже центра экрана.
+  const targetY = screen.position.y + (0.75 - depthT * 1.15)
+
   return {
     seatId,
-    position: { ...seat.position },
-    target: {
-      x: hall.screen.position.x,
-      y: hall.screen.position.y,
-      z: hall.screen.position.z,
+    position: {
+      x: seat.position.x,
+      y: seat.position.y + 0.02,
+      z: seat.position.z,
     },
-    fov: 55,
+    target: {
+      x: screen.position.x,
+      y: targetY,
+      z: screen.position.z,
+    },
+    fov,
   }
 }
 

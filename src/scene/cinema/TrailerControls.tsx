@@ -4,7 +4,6 @@
  */
 import { useEffect, useState } from 'react'
 import { FILMS, type FilmId } from './films'
-import { resumeAudioContext } from './spatialAudio'
 import { trailerStore, type TrailerSnapshot } from './trailerStore'
 import './trailerControls.css'
 
@@ -24,14 +23,22 @@ export function TrailerControls({ visible }: Props) {
     : null
   const status = active ? snap.statuses[active.id] : 'idle'
 
-  const unlockAnd = async (fn: () => void) => {
+  const unlockAnd = (fn: () => void) => {
     trailerStore.unlockAudio()
-    await resumeAudioContext()
     fn()
   }
 
   return (
     <div className="trailer-dock" role="region" aria-label="Кинозона трейлеров">
+      <div className="trailer-dock__head">
+        <div>
+          <span className="trailer-dock__eyebrow">AURORA TRAILER LOUNGE</span>
+          <strong>Премьеры в объёмном звуке</strong>
+        </div>
+        <span className="trailer-dock__signal">
+          <i aria-hidden /> HRTF READY
+        </span>
+      </div>
       <div className="trailer-dock__films">
         {FILMS.map((film) => {
           const st = snap.statuses[film.id]
@@ -68,7 +75,7 @@ export function TrailerControls({ visible }: Props) {
                     {st === 'loading'
                       ? 'Загрузка…'
                       : isActive && st === 'playing'
-                        ? 'Играет'
+                        ? 'Сейчас на экране'
                         : 'Смотреть трейлер'}
                   </button>
                 </div>
@@ -101,7 +108,7 @@ export function TrailerControls({ visible }: Props) {
             })
           }
         >
-          {status === 'playing' ? 'Pause' : 'Play'}
+          {status === 'playing' ? 'Пауза' : 'Воспроизвести'}
         </button>
         <button
           type="button"
@@ -114,7 +121,7 @@ export function TrailerControls({ visible }: Props) {
             })
           }
         >
-          Restart
+          Сначала
         </button>
         <button
           type="button"
@@ -122,7 +129,7 @@ export function TrailerControls({ visible }: Props) {
           aria-pressed={snap.muted}
           onClick={() => trailerStore.setMuted(!snap.muted)}
         >
-          {snap.muted ? 'Unmute' : 'Mute'}
+          {snap.muted ? 'Включить звук' : 'Без звука'}
         </button>
         <label className="trailer-volume">
           <span>Громкость</span>
@@ -159,5 +166,5 @@ function restartFilm(id: FilmId) {
   window.dispatchEvent(
     new CustomEvent('cinema:restart-video', { detail: { id } }),
   )
-  trailerStore.requestPlay(id)
+  playFilm(id)
 }
