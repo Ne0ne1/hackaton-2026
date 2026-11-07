@@ -32,16 +32,24 @@
 
 ### 2026-11-07 — два исполнителя и параллельные ветки
 
-- Статус: принято
-- Контекст: конкурсный кейс «Билет с видом на экран»; нужны Cursor (ядро) и Cline+MiniMax (модули опыта) одновременно без конфликтов в `docs/TASKS.md`.
-- Решение: единая точка правды — `docs/TEAM_PROTOCOL.md`. Ветки: `feat/cursor-core`, `feat/cline-experience`; `main` только для стабильной интеграции. `docs/TASKS.md` и `docs/DECISIONS.md` пишет только Cursor; MiniMax ведёт `docs/CLINE_PROGRESS.md`. Контракт модулей — `docs/INTEGRATION_CONTRACT.md`. Codex готовит ТЗ и аудит, не правит те же файлы параллельно с разработчиками. Telegram не делаем. Приоритеты P0→P3 как в протоколе.
-- Последствия: агенты не пушат продукт напрямую в `main`; запрещены force push / hard reset / авторазрешение конфликтов; MiniMax не меняет архитектуру и 3D ядра.
+- Статус: принято (уточнено решением про владение 3D ниже)
+- Контекст: конкурсный кейс «Билет с видом на экран»; нужны Cursor и Cline+MiniMax одновременно без конфликтов в `docs/TASKS.md`.
+- Решение: единая точка правды — `docs/TEAM_PROTOCOL.md`. Ветки: `feat/cursor-core`, `feat/cline-experience`; `main` для стабильной интеграции. Журналы разделены. Telegram не делаем.
+- Последствия: без force push / hard reset / автослияния; зоны файлов — по актуальному TEAM_PROTOCOL.
 - Автор: cursor
 
 ### 2026-11-07 — стек ядра и контракт v1
 
+- Статус: принято (уточнено: реализацию сцены ведёт MiniMax)
+- Контекст: нужен каркас и контракт данных.
+- Решение: Vite + React + TypeScript + Three/R3F. Данные зала — `src/types/hall.ts` / `src/data/demoHall.ts` / `src/core/hallApi.ts`; билеты в `localStorage`. Контракт v1. Модули опыта — `src/experience/**`.
+- Последствия: не дублировать модель Seat; один основной 3D-вид.
+- Автор: cursor
+
+### 2026-11-07 — владение 3D передано MiniMax
+
 - Статус: принято
-- Контекст: нужен каркас до старта SeatMatch у MiniMax.
-- Решение: Vite + React + TypeScript + Three.js / React Three Fiber. Модель зала и места в `src/types/hall.ts`, демо-геометрия в `src/data/demoHall.ts`, публичный API модулей в `src/core/hallApi.ts`, билеты в `localStorage`. Контракт `docs/INTEGRATION_CONTRACT.md` утверждён как v1. Модули опыта живут в `src/experience/**`.
-- Последствия: MiniMax стартует SeatMatch только после `git fetch` и merge/rebase на `origin/feat/cursor-core` (или после появления API в своей ветке). Не дублировать типы Seat и 3D-движок.
+- Контекст: текущий 3D слабый для оценки дизайна; нужно чётко разделить работу.
+- Решение: **MiniMax — единственный владелец** `SeatView3D` / сцены / материалов / света / камеры в сцене / анимаций. **Cursor больше не разрабатывает 3D**; отвечает за backend, данные, схему, покупку, `App` wiring, сборку. Контракт данных v1 сохраняется (`hall`, `cameraView`, `occupiedSeatIds`). Приоритеты: P0 покупка + качественный 3D; P1 SeatMatch; P2 SeatCompare/SpatialSound; P3 HonestView. Правила в шести файлах протокола **заменяют** старое распределение.
+- Последствия: Cursor не правит 3D без согласования; MiniMax может cherry-pick коммит правил; черновой `SeatView3D.tsx` на `feat/cursor-core` перейдёт MiniMax для переработки.
 - Автор: cursor

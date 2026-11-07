@@ -27,6 +27,7 @@
 | T-005 | done | cursor | Создать ветки на GitHub; каркас ядра, модель мест, утвердить контракт | `feat/cursor-core`, `feat/cline-experience`, `src/**`, `docs/INTEGRATION_CONTRACT.md`, `package.json` | `npm run build` |
 | T-006 | done | cursor | Снять устаревшие «предварительный контракт» после аудита готовности SeatMatch | `docs/TEAM_PROTOCOL.md`, `docs/CLINE_PROGRESS.md`, `.clinerules/01-minimax-executor.md` | сверка формулировок |
 | T-007 | done | cursor | Интегрировать SeatMatch (cherry-pick fef2196) в App | `src/App.tsx`, `src/styles.css`, `src/experience/seatMatch/**` | `npm run build`; `node --test` 12/12 |
+| T-008 | done | cursor | Передать владение 3D MiniMax (только правила, два коммита) | 6 файлов протокола; `docs/TASKS.md`; `docs/DECISIONS.md` | `git show --stat`; 3D-код не менялся |
 
 ## Журнал
 
@@ -72,3 +73,10 @@
 - Исполнитель: Cursor Agent на `feat/cursor-core`. Cherry-pick `fef21960` (без merge всей ветки MiniMax).
 - Результат: `SeatMatch` подключён в `App.tsx` через `onPickSeat` → выделение на схеме + смена 3D-камеры; `registerExperienceModule({ id: 'seat-match' })`; профили Баланс / Лучший обзор / Дешевле из UI модуля. Алгоритм MiniMax не переписывался.
 - Проверки: `npm run build` OK; `node --test src/experience/seatMatch/seatMatch.test.mjs` — 12/12. Push в `main` не делался.
+
+### T-008 — передача 3D MiniMax
+
+- Исполнитель: Cursor Agent на `feat/cursor-core`. 3D-код не перерабатывался.
+- Коммит №1 (только правила, для cherry-pick MiniMax): `d5135be6543fe55dbf45f7700d491b9da2c82b96` — 6 файлов протокола.
+- Коммит №2: журналы `TASKS`/`DECISIONS`.
+- Результат: Cursor больше не владеет 3D; дальше — backend/покупка/интеграция. Push ждал команды пользователя.
