@@ -5,32 +5,36 @@ alwaysApply: true
 
 # Маршрутизация задач
 
-Перед задачей прочитай `docs/TEAM_PROTOCOL.md`, `AGENTS.md`, `docs/TASKS.md`, `docs/DECISIONS.md` и при работе с модулями — `docs/INTEGRATION_CONTRACT.md`. Оцени сложность и выбери исполнителя. Ответы, планы и отчёты пиши на русском.
+Перед задачей прочитай `docs/TEAM_PROTOCOL.md`, `AGENTS.md`, `docs/TASKS.md`, `docs/DECISIONS.md` и `docs/INTEGRATION_CONTRACT.md`. Ответы на русском.
+
+**Новые правила заменяют старые:** 3D-сцену делает MiniMax, не Cursor.
 
 ## Зона Cursor (исполнитель A)
 
-Cursor сам делает ядро в ветке `feat/cursor-core`:
+Ветка `feat/cursor-core`:
 
-- архитектура, backend, схема зала, покупка и сохранение билетов;
-- основной 3D-рендерер, камеры, перспектива;
-- общие маршруты, конфигурация, сборка, деплой;
-- финальное объединение модулей опыта в `main`.
+- архитектура, backend, API, данные зала/сеансов;
+- схема `SeatMap`, покупка, статусы, `App.tsx`, общие стили;
+- подключение модулей MiniMax, сборка, деплой.
 
-Cursor **не** переписывает модули MiniMax (SeatMatch, SeatCompare, HonestView, SpatialSound) без согласования.  
-Cursor учитывает контракт 3D-сцены и данных зала из `docs/INTEGRATION_CONTRACT.md` и подтверждает фактические интерфейсы перед интеграцией.
+Cursor **не** разрабатывает и **не** полирует 3D.  
+Не править: `src/components/SeatView3D.tsx`, `SeatView3D.css`, `src/scene/**`, `src/experience/**` (кроме wiring в `App.tsx`).
 
-## Другие исполнители
+## Зона MiniMax
 
-- SeatMatch / SeatCompare / HonestView / SpatialSound → зона Cline + MiniMax (`feat/cline-experience`), не зона правок Cursor без явной интеграции.
-- Архитектуру границ, ТЗ для MiniMax, сквозные ошибки, аудит готовности → Codex через CLI.
-- OpenRouter — только резерв после исчерпанного лимита и только после явного подтверждения пользователя.
+- Весь визуальный 3D-зал и `SeatView3D`;
+- SeatMatch / SeatCompare / HonestView / SpatialSound;
+- ветка `feat/cline-experience`.
 
-Не пиши, что модель переключена, если переключение не выполнено. `codex exec` — отдельный процесс CLI, а не смена модели этого чата.
+## Прочее
 
-Не вызывай платные API без подтверждения. Не обходи лимиты подписок и не повторяй запуск с другим ключом, другой моделью или опасными флагами.
+- Границы/ТЗ/аудит → Codex CLI.
+- OpenRouter — только после исчерпания лимита и явного подтверждения.
 
-Прямой push продукта в `main` не делать. Запрещены force push, `reset --hard`, удаление чужих коммитов, автослияние конфликтов.
+Не пиши, что модель переключена, если этого не было. Не вызывай платные API без подтверждения. Не обходи лимиты.
 
-Если задача для Codex, проверь `codex --version` и `codex login status`. Ничего не устанавливай. При рабочем входе запиши задание в `docs/codex-prompt.md` по шаблону из `AGENTS.md` и запусти `scripts/run-codex.sh write docs/codex-prompt.md` либо `scripts/run-codex.sh read-only docs/codex-prompt.md`. Если запуск недоступен или завершился ошибкой, остановись и передай пользователю эту команду и текст задания.
+Прямой push продукта в `main` запрещён. Запрещены force push, `reset --hard`, удаление чужих коммитов, автослияние.
 
-Пример: «схема зала и покупка» — Cursor. «SeatMatch по контракту» — MiniMax. «спроектируй границы модулей» — Codex. «лимит исчерпан» — спроси про OpenRouter и жди подтверждения.
+Если задача для Codex: `codex --version`, `codex login status`, затем `scripts/run-codex.sh` по шаблону `AGENTS.md`. При сбое — отдать пользователю команду и текст задания.
+
+Пример: «покупка и схема» — Cursor. «реалистичный 3D-зал» — MiniMax. «аудит контракта» — Codex.
