@@ -28,6 +28,7 @@
 | T-006 | done | cursor | Снять устаревшие «предварительный контракт» после аудита готовности SeatMatch | `docs/TEAM_PROTOCOL.md`, `docs/CLINE_PROGRESS.md`, `.clinerules/01-minimax-executor.md` | сверка формулировок |
 | T-007 | done | cursor | Интегрировать SeatMatch (cherry-pick fef2196) в App | `src/App.tsx`, `src/styles.css`, `src/experience/seatMatch/**` | `npm run build`; `node --test` 12/12 |
 | T-008 | done | cursor | Передать владение 3D MiniMax (только правила, два коммита) | 6 файлов протокола; `docs/TASKS.md`; `docs/DECISIONS.md` | `git show --stat`; 3D-код не менялся |
+| T-009 | done | cursor | Дизайн схемы/покупки + cherry-pick редизайна SeatMatch | `App.tsx`, `SeatMap.tsx`, `styles.css`, `index.html`, seatMatch | `npm run build` |
 
 ## Журнал
 
@@ -80,3 +81,9 @@
 - Коммит №1 (только правила, для cherry-pick MiniMax): `d5135be6543fe55dbf45f7700d491b9da2c82b96` — 6 файлов протокола.
 - Коммит №2: журналы `TASKS`/`DECISIONS`.
 - Результат: Cursor больше не владеет 3D; дальше — backend/покупка/интеграция. Push ждал команды пользователя.
+
+### T-009 — UI покупки и схемы под оценку дизайна
+
+- Исполнитель: Cursor. `SeatView3D` не менялся.
+- Результат: киношный UI (шрифты Cormorant/Outfit, схема с проходом, checkout); cherry-pick `6b8066f` (редизайн SeatMatch MiniMax).
+- Проверки: `npm run build`.

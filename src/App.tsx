@@ -20,6 +20,12 @@ registerExperienceModule({
   render: SeatMatch,
 })
 
+const CATEGORY_RU: Record<string, string> = {
+  standard: 'Стандарт',
+  comfort: 'Комфорт',
+  vip: 'VIP',
+}
+
 export default function App() {
   const cinemas = listCinemas()
   const [cinemaId, setCinemaId] = useState(cinemas[0]?.id ?? '')
@@ -29,6 +35,7 @@ export default function App() {
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
+  const [buying, setBuying] = useState(false)
 
   const hall = getHallGeometryForSession(sessionId)
   const seats = useMemo(
@@ -40,6 +47,8 @@ export default function App() {
     ? getSeatCameraView(sessionId, selectedSeatId) ?? null
     : null
   const occupied = seats.filter((s) => s.status === 'sold').map((s) => s.id)
+  const session = sessions.find((s) => s.id === sessionId)
+  const cinema = cinemas.find((c) => c.id === cinemaId)
 
   function onCinemaChange(id: string) {
     setCinemaId(id)
@@ -64,7 +73,8 @@ export default function App() {
   }
 
   function onBuy() {
-    if (!selectedSeatId) return
+    if (!selectedSeatId || buying) return
+    setBuying(true)
     try {
       const bought = buySeat(sessionId, selectedSeatId)
       setTicket(bought)
@@ -72,22 +82,26 @@ export default function App() {
       setRevision((n) => n + 1)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось купить билет')
+    } finally {
+      setBuying(false)
     }
   }
 
   return (
     <div className="app">
+      <div className="app__atmosphere" aria-hidden />
+
       <header className="hero">
         <p className="brand">Билет с видом на экран</p>
-        <h1>Выберите место и посмотрите на экран оттуда</h1>
+        <h1>Смотри фильм ещё до покупки — с вашего кресла</h1>
         <p className="lede">
-          Хакатон «Код Единства» — покупка с живой перспективой зала.
+          Выберите место, увидьте перспективу зала и оформите билет за один шаг.
         </p>
       </header>
 
       <section className="controls" aria-label="Кинотеатр и сеанс">
         <label>
-          Кинотеатр
+          <span>Кинотеатр</span>
           <select value={cinemaId} onChange={(e) => onCinemaChange(e.target.value)}>
             {cinemas.map((c) => (
               <option key={c.id} value={c.id}>
@@ -97,28 +111,33 @@ export default function App() {
           </select>
         </label>
         <label>
-          Сеанс
+          <span>Сеанс</span>
           <select value={sessionId} onChange={(e) => onSessionChange(e.target.value)}>
             {sessions.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.movieTitle} · {new Date(s.startsAt).toLocaleString('ru-RU')}
+                {s.movieTitle} · {new Date(s.startsAt).toLocaleString('ru-RU', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </option>
             ))}
           </select>
         </label>
-      </section>
-
-      <section className="panel seat-match-panel" aria-label="Умный подбор места">
-        <SeatMatch
-          sessionId={sessionId}
-          revision={revision}
-          onPickSeat={onSelectSeat}
-        />
+        {session && (
+          <p className="controls__meta">
+            {cinema?.name} · {hall?.name ?? 'Зал'} · {session.movieTitle}
+          </p>
+        )}
       </section>
 
       <div className="workspace">
-        <section className="panel">
-          <h2>Схема зала</h2>
+        <section className="panel panel--map">
+          <div className="panel__head">
+            <h2>Схема зала</h2>
+            <p className="panel__hint">Нажмите кресло или выберите из подбора</p>
+          </div>
           <SeatMap
             seats={seats}
             selectedSeatId={selectedSeatId}
@@ -132,8 +151,15 @@ export default function App() {
           </ul>
         </section>
 
-        <section className="panel">
-          <h2>Вид на экран</h2>
+        <section className="panel panel--view">
+          <div className="panel__head">
+            <h2>Вид на экран</h2>
+            <p className="panel__hint">
+              {selectedSeatId
+                ? `С места ${selectedSeatId}`
+                : 'Выберите место, чтобы увидеть перспективу'}
+            </p>
+          </div>
           {hall ? (
             <SeatView3D
               hall={hall}
@@ -141,33 +167,50 @@ export default function App() {
               occupiedSeatIds={occupied}
             />
           ) : (
-            <p>Зал не найден</p>
+            <p className="panel__empty">Зал не найден</p>
           )}
         </section>
       </div>
 
+      <section className="panel seat-match-panel" aria-label="Умный подбор места">
+        <SeatMatch
+          sessionId={sessionId}
+          revision={revision}
+          onPickSeat={onSelectSeat}
+        />
+      </section>
+
       <section className="checkout" aria-label="Покупка">
         {selected ? (
-          <>
-            <p>
-              Место <strong>{selected.id}</strong> · ряд {selected.row}, № {selected.number} ·{' '}
-              {selected.price} ₽ · {selected.status === 'sold' ? 'занято' : 'свободно'}
-            </p>
-            <button
-              type="button"
-              className="buy"
-              disabled={selected.status === 'sold'}
-              onClick={onBuy}
-            >
-              Купить билет
-            </button>
-          </>
+          <div className="checkout__grid">
+            <div>
+              <p className="checkout__eyebrow">Ваш билет</p>
+              <p className="checkout__title">
+                Ряд {selected.row}, место {selected.number}
+              </p>
+              <p className="checkout__meta">
+                {CATEGORY_RU[selected.category] ?? selected.category} · {selected.id} ·{' '}
+                {selected.status === 'sold' ? 'уже занято' : 'свободно'}
+              </p>
+            </div>
+            <div className="checkout__action">
+              <p className="checkout__price">{selected.price} ₽</p>
+              <button
+                type="button"
+                className="buy"
+                disabled={selected.status === 'sold' || buying}
+                onClick={onBuy}
+              >
+                {buying ? 'Оформляем…' : 'Купить билет'}
+              </button>
+            </div>
+          </div>
         ) : (
-          <p>Выберите свободное место на схеме</p>
+          <p className="checkout__idle">Выберите свободное место на схеме или в подборе</p>
         )}
         {ticket && (
           <p className="ok" role="status">
-            Билет сохранён: {ticket.id}. Место занято для этого сеанса.
+            Билет сохранён. Место {ticket.seatId} занято на этот сеанс.
           </p>
         )}
         {error && (
