@@ -1,10 +1,12 @@
 # Задачи
 
-Общий журнал хакатона «Код Единства». Перед работой прочитай этот файл и `docs/DECISIONS.md`.
+Общий журнал хакатона «Код Единства». Перед работой прочитай этот файл, `docs/DECISIONS.md` и `docs/TEAM_PROTOCOL.md`.
 
 Статусы: `todo`, `in_progress`, `blocked`, `review`, `done`.
 
-Исполнители: `cursor`, `codex`. OpenRouter сюда не ставить, пока пользователь явно не подтвердил расход API.
+Исполнители в этом файле: `cursor`, `codex`. OpenRouter сюда не ставить, пока пользователь явно не подтвердил расход API.
+
+**Важно:** `docs/TASKS.md` и `docs/DECISIONS.md` обновляет только Cursor. MiniMax (Cline) читает эти файлы и ведёт прогресс в `docs/CLINE_PROGRESS.md` в своей ветке.
 
 ## Активные блокировки
 
@@ -21,6 +23,7 @@
 | T-001 | done | cursor | Подготовить протокол совместной работы агентов, без конкурсного продукта | `AGENTS.md`, `.cursor/rules/agent-routing.mdc`, `.cursor/rules/shared-context.mdc`, `docs/TASKS.md`, `docs/DECISIONS.md`, `scripts/run-codex.sh` | `zsh -n scripts/run-codex.sh`; отдельных тестов проекта нет |
 | T-002 | done | cursor | Безопасная диагностика готовности, без запуска Codex и без установки программ | `docs/TASKS.md` | `zsh -n scripts/run-codex.sh`; `codex --version`; `codex login status`; `git --version`; `node --version` |
 | T-003 | done | cursor | Создать GitHub-репозиторий и залить текущий каркас | `.gitignore`, `docs/TASKS.md`, `docs/DECISIONS.md`, git remote | `gh repo view Ne0ne1/hackaton-2026`; `git status` |
+| T-004 | done | cursor | Адаптировать инструкции под параллельную работу Cursor и Cline/MiniMax | `AGENTS.md`, `.cursor/rules/**`, `.clinerules/**`, `docs/TEAM_PROTOCOL.md`, `docs/INTEGRATION_CONTRACT.md`, `docs/CLINE_PROGRESS.md`, `docs/TASKS.md`, `docs/DECISIONS.md` | сверка правил; продукт не разрабатывался |
 
 ## Журнал
 
@@ -40,5 +43,11 @@
 ### T-003 — GitHub-репозиторий
 
 - Исполнитель: Cursor Agent. Модель чата не переключалась. Codex не запускался.
-- Результат: локальный git на `main`, remote `origin`, приватный репозиторий https://github.com/Ne0ne1/hackaton-2026, каркас запушен.
+- Результат: локальный git на `main`, remote `origin`, публичный репозиторий https://github.com/Ne0ne1/hackaton-2026, каркас запушен. Collaborator: `liquidsss` (write).
 - Проверки: `git status` чистый после пуша; ветка tracking `origin/main`.
+
+### T-004 — протокол двух исполнителей
+
+- Исполнитель: Cursor Agent. Модель чата не переключалась. Codex не запускался. Продукт не разрабатывался.
+- Результат: добавлены `docs/TEAM_PROTOCOL.md`, `docs/INTEGRATION_CONTRACT.md`, `docs/CLINE_PROGRESS.md`; обновлены `AGENTS.md`, `.cursor/rules/*`, `.clinerules/01-minimax-executor.md`, журналы. Параллельные ветки `feat/cursor-core` и `feat/cline-experience`; журналы разделены; контракт предварительный.
+- Проверки: набор тестов продукта отсутствует; сверка правил на противоречия выполнена вручную.
