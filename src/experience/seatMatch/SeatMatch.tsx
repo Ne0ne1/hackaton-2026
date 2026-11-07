@@ -4,7 +4,7 @@
  * Данные читаются только через утверждённое ядро (`@/core/hallApi`).
  * Модуль ничего не покупает и не мутирует статусы — только рекомендует.
  */
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   getHallGeometryForSession,
   getSeatCameraView,
@@ -27,26 +27,60 @@ export type SeatMatchProps = {
   revision?: number
 }
 
-const PROFILES: { id: string; label: string; profile: SeatMatchProfile }[] = [
+type ProfileId = 'balanced' | 'best-view' | 'budget'
+
+const PROFILES: {
+  id: ProfileId
+  label: string
+  hint: string
+  profile: SeatMatchProfile
+}[] = [
   {
     id: 'balanced',
     label: 'Баланс',
+    hint: 'Хороший обзор и разумная цена',
     profile: { priceWeight: 0.5, viewWeight: 1, centerWeight: 0.6 },
   },
   {
     id: 'best-view',
     label: 'Лучший обзор',
+    hint: 'Максимум качества изображения',
     profile: { priceWeight: 0.2, viewWeight: 1, centerWeight: 1 },
   },
   {
     id: 'budget',
     label: 'Дешевле',
+    hint: 'Самые доступные свободные места',
     profile: { priceWeight: 1, viewWeight: 0.6, centerWeight: 0.5 },
   },
 ]
 
+/** Понятное человеку название категории места. */
+const CATEGORY_HINT: Record<string, string> = {
+  vip: 'VIP',
+  comfort: 'Комфорт',
+  standard: 'Стандарт',
+}
+
+/**
+ * Человекочитаемая оценка качества обзора.
+ * Подаётся как полезная метрика для зрителя, а не как «угол 12°».
+ */
+function viewVerdict(viewScore: number): string {
+  if (viewScore >= 0.86) return 'Отличный'
+  if (viewScore >= 0.7) return 'Хороший'
+  if (viewScore >= 0.5) return 'Средний'
+  return 'Базовый'
+}
+
+/** Целое число с разделителем разрядов: 12000 → «12 000». */
+function formatPrice(value: number): string {
+  return value.toLocaleString('ru-RU').replace(/\u00a0/g, ' ')
+}
+
 export function SeatMatch({ sessionId, onPickSeat, revision = 0 }: SeatMatchProps) {
-  const [profileId, setProfileId] = useState(PROFILES[0].id)
+  const [profileId, setProfileId] = useState<ProfileId>(PROFILES[0].id)
+  const profileRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
   const seats = useMemo(
     () => getSeatsWithStatus(sessionId),
@@ -62,92 +96,203 @@ export function SeatMatch({ sessionId, onPickSeat, revision = 0 }: SeatMatchProp
     })
   }, [seats, hall, profileId])
 
+  /** Переключение профиля стрелками — как в нативном segmented control. */
+  const onProfileKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
+      if (!keys.includes(event.key)) return
+      event.preventDefault()
+      const index = PROFILES.findIndex((p) => p.id === profileId)
+      let next = index
+      if (event.key === 'ArrowLeft') next = (index - 1 + PROFILES.length) % PROFILES.length
+      if (event.key === 'ArrowRight') next = (index + 1) % PROFILES.length
+      if (event.key === 'Home') next = 0
+      if (event.key === 'End') next = PROFILES.length - 1
+      const target = PROFILES[next]
+      setProfileId(target.id)
+      profileRefs.current[target.id]?.focus()
+    },
+    [profileId],
+  )
+
   if (!hall) {
-    return <p className="seat-match__empty">Зал не найден</p>
+    return (
+      <section className="seat-match seat-match--empty" aria-live="polite">
+        <h2 className="seat-match__title">Подбор места</h2>
+        <p className="seat-match__emptyText">Зал не найден</p>
+      </section>
+    )
   }
 
   if (!result || result.recommendations.length === 0) {
     return (
-      <p className="seat-match__empty">
-        Свободных мест нет — посмотрите другой сеанс.
-      </p>
+      <section className="seat-match seat-match--empty" aria-live="polite">
+        <h2 className="seat-match__title">Подбор места</h2>
+        <p className="seat-match__emptyText">
+          Свободных мест нет — посмотрите другой сеанс.
+        </p>
+      </section>
     )
   }
 
+  const activeProfile = PROFILES.find((p) => p.id === profileId) ?? PROFILES[0]
+
   return (
-    <div className="seat-match">
-      <div className="seat-match__head">
-        <div>
-          <p className="seat-match__title">Подбор места</p>
-          <p className="seat-match__meta">
-            Свободно {result.freeCount} · лучшая цена около{' '}
-            {result.medianPrice} ₽
-          </p>
+    <section className="seat-match" aria-labelledby="seat-match-heading">
+      <header className="seat-match__head">
+        <p className="seat-match__eyebrow">Персональная рекомендация</p>
+        <h2 className="seat-match__title" id="seat-match-heading">
+          Подберём место, с которого видно всё
+        </h2>
+        <p className="seat-match__lead">
+          Мы оценили свободные кресла по углу обзора, расстоянию до экрана и
+          цене. Выберите, что для вас важнее — и мы покажем лучшие варианты.
+        </p>
+
+        <dl className="seat-match__stats">
+          <div className="seat-match__stat">
+            <dt className="seat-match__statLabel">Свободно мест</dt>
+            <dd className="seat-match__statValue">{result.freeCount}</dd>
+          </div>
+          <div className="seat-match__stat">
+            <dt className="seat-match__statLabel">Цена от</dt>
+            <dd className="seat-match__statValue">
+              {formatPrice(result.medianPrice)}
+              <span className="seat-match__statUnit">₽</span>
+            </dd>
+          </div>
+          <div className="seat-match__stat">
+            <dt className="seat-match__statLabel">Зал</dt>
+            <dd className="seat-match__statValue seat-match__statValue--hall">
+              {hall.name}
+            </dd>
+          </div>
+        </dl>
+      </header>
+
+      <div className="seat-match__profilesWrap">
+        <div
+          className="seat-match__profiles"
+          role="radiogroup"
+          aria-label="Приоритет подбора места"
+        >
+          {PROFILES.map((p) => {
+            const active = p.id === profileId
+            return (
+              <button
+                key={p.id}
+                ref={(el) => {
+                  profileRefs.current[p.id] = el
+                }}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                tabIndex={active ? 0 : -1}
+                className={[
+                  'seat-match__chip',
+                  active ? 'seat-match__chip--active' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => setProfileId(p.id)}
+                onKeyDown={onProfileKeyDown}
+              >
+                {p.label}
+              </button>
+            )
+          })}
         </div>
-        <div className="seat-match__profiles" role="group" aria-label="Приоритет подбора">
-          {PROFILES.map((p) => (
-            <button
-              key={p.id}
-              type="button"
+        <p className="seat-match__profileHint">{activeProfile.hint}</p>
+      </div>
+
+      <ol className="seat-match__list" key={profileId}>
+        {result.recommendations.map((rec, index) => {
+          const view = getSeatCameraView(sessionId, rec.seat.id)
+          const isTop = index === 0
+          const viewPercent = Math.round(rec.viewScore * 100)
+          return (
+            <li
+              key={rec.seat.id}
               className={[
-                'seat-match__chip',
-                p.id === profileId ? 'seat-match__chip--active' : '',
+                'seat-match__item',
+                isTop ? 'seat-match__item--top' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
-              onClick={() => setProfileId(p.id)}
             >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
+              {isTop && <span className="seat-match__badge">Лучший выбор</span>}
 
-      <ol className="seat-match__list">
-        {result.recommendations.map((rec, index) => {
-          const view = getSeatCameraView(sessionId, rec.seat.id)
-          return (
-            <li key={rec.seat.id} className="seat-match__item">
-              <div className="seat-match__rank">{index + 1}</div>
-              <div className="seat-match__body">
-                <p className="seat-match__seat">
-                  <strong>{rec.seat.id}</strong>
-                  <span className="seat-match__price">{rec.seat.price} ₽</span>
-                </p>
-                <p className="seat-match__tags">
-                  <span className={`seat-match__cat seat-match__cat--${rec.seat.category}`}>
-                    {categoryLabel(rec.seat.category)}
+              <div className="seat-match__main">
+                <div className="seat-match__place">
+                  <span className="seat-match__row">Ряд {rec.seat.row}</span>
+                  <span className="seat-match__sep" aria-hidden="true" />
+                  <span className="seat-match__seatNumber">
+                    место {rec.seat.number}
                   </span>
-                  {rec.reasons.map((reason) => (
-                    <span key={reason} className="seat-match__tag">
-                      {formatReason(reason)}
+                </div>
+
+                <div className="seat-match__metaRow">
+                  <span
+                    className={`seat-match__cat seat-match__cat--${rec.seat.category}`}
+                  >
+                    {CATEGORY_HINT[rec.seat.category] ?? categoryLabel(rec.seat.category)}
+                  </span>
+                  <span className="seat-match__price">
+                    {formatPrice(rec.seat.price)}
+                    <span className="seat-match__priceUnit">₽</span>
+                  </span>
+                </div>
+
+                <div className="seat-match__quality">
+                  <div className="seat-match__qualityTop">
+                    <span className="seat-match__qualityLabel">
+                      Качество обзора
                     </span>
+                    <span className="seat-match__qualityValue">
+                      {viewVerdict(rec.viewScore)}
+                    </span>
+                  </div>
+                  <div
+                    className="seat-match__meter"
+                    role="img"
+                    aria-label={`Качество обзора: ${viewVerdict(rec.viewScore)}, ${viewPercent} из 100`}
+                  >
+                    <span
+                      className="seat-match__meterFill"
+                      style={{ width: `${viewPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <ul className="seat-match__reasons">
+                  {rec.reasons.map((reason) => (
+                    <li key={reason} className="seat-match__reason">
+                      {formatReason(reason)}
+                    </li>
                   ))}
-                </p>
-                <p className="seat-match__stats">
-                  обзор {Math.round(rec.viewScore * 100)}% · угол {rec.angleDeg}° ·
-                  расстояние {rec.distance} м
-                  {view ? ` · fov ${view.fov}°` : ''}
+                </ul>
+              </div>
+
+              <div className="seat-match__side">
+                {onPickSeat && (
+                  <button
+                    type="button"
+                    className="seat-match__pick"
+                    onClick={() => onPickSeat(rec.seat.id)}
+                  >
+                    Выбрать место
+                  </button>
+                )}
+                <p className="seat-match__tech" title={view ? `fov ${view.fov}°` : undefined}>
+                  <span className="seat-match__techValue">{rec.score}</span>
+                  <span className="seat-match__techLabel">баллов</span>
                 </p>
               </div>
-              <div className="seat-match__score">
-                <span className="seat-match__scoreValue">{rec.score}</span>
-                <span className="seat-match__scoreLabel">баллов</span>
-              </div>
-              {onPickSeat && (
-                <button
-                  type="button"
-                  className="seat-match__pick"
-                  onClick={() => onPickSeat(rec.seat.id)}
-                >
-                  Выбрать
-                </button>
-              )}
             </li>
           )
         })}
       </ol>
-    </div>
+    </section>
   )
 }
 
