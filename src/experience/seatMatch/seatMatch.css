@@ -1,0 +1,194 @@
+/* SeatMatch — оформление в палитре приложения (переменные из styles.css). */
+
+.seat-match__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.seat-match__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.seat-match__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.seat-match__meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.seat-match__profiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.seat-match__chip {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.seat-match__chip:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.seat-match__chip--active {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.seat-match__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.seat-match__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-elev) 70%, black);
+}
+
+.seat-match__rank {
+  flex: 0 0 auto;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.seat-match__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.seat-match__seat {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+}
+
+.seat-match__price {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.seat-match__tags {
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.seat-match__cat,
+.seat-match__tag {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.seat-match__cat--vip {
+  border-color: var(--vip);
+  color: #e6cd8f;
+}
+
+.seat-match__cat--comfort {
+  border-color: var(--comfort);
+  color: #9fd8c4;
+}
+
+.seat-match__cat--standard {
+  border-color: var(--standard);
+  color: #b9cee0;
+}
+
+.seat-match__stats {
+  margin: 0.3rem 0 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.seat-match__score {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3rem;
+}
+
+.seat-match__scoreValue {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.seat-match__scoreLabel {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.seat-match__pick {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.seat-match__pick:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+@media (max-width: 640px) {
+  .seat-match__item {
+    flex-wrap: wrap;
+  }
+
+  .seat-match__pick {
+    width: 100%;
+  }
+}
