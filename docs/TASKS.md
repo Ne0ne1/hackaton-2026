@@ -25,6 +25,7 @@
 | T-003 | done | cursor | Создать GitHub-репозиторий и залить текущий каркас | `.gitignore`, `docs/TASKS.md`, `docs/DECISIONS.md`, git remote | `gh repo view Ne0ne1/hackaton-2026`; `git status` |
 | T-004 | done | cursor | Адаптировать инструкции под параллельную работу Cursor и Cline/MiniMax | `AGENTS.md`, `.cursor/rules/**`, `.clinerules/**`, `docs/TEAM_PROTOCOL.md`, `docs/INTEGRATION_CONTRACT.md`, `docs/CLINE_PROGRESS.md`, `docs/TASKS.md`, `docs/DECISIONS.md` | сверка правил; продукт не разрабатывался |
 | T-005 | done | cursor | Создать ветки на GitHub; каркас ядра, модель мест, утвердить контракт | `feat/cursor-core`, `feat/cline-experience`, `src/**`, `docs/INTEGRATION_CONTRACT.md`, `package.json` | `npm run build` |
+| T-006 | done | cursor | Снять устаревшие «предварительный контракт» после аудита готовности SeatMatch | `docs/TEAM_PROTOCOL.md`, `docs/CLINE_PROGRESS.md`, `.clinerules/01-minimax-executor.md` | сверка формулировок |
 
 ## Журнал
 
@@ -58,3 +59,15 @@
 - Исполнитель: Cursor Agent на `feat/cursor-core`. Codex не запускался. SeatMatch не начинался.
 - Результат: на GitHub опубликованы `feat/cursor-core` и `feat/cline-experience`. Vite+React+R3F каркас: кинотеатр/сеанс, схема мест, 3D-вид с места, покупка в localStorage. API в `src/core/hallApi.ts`. Контракт утверждён (`docs/INTEGRATION_CONTRACT.md` v1). Зона MiniMax: `src/experience/`.
 - Проверки: `npm run build`.
+
+### T-006 — выравнивание после аудита
+
+- Исполнитель: Cursor Agent. Аудит: [Codex-style audit](b26c423a-9c24-4b19-ade0-255dbc133904). Вердикт: MiniMax может начинать SeatMatch.
+- Результат: убраны устаревшие «предварительный контракт»; обновлены TEAM_PROTOCOL, CLINE_PROGRESS, clinerules; зафиксирован push на GitHub (`github` remote).
+- Проверки: сверка формулировок.
+
+### T-006 — актуализация протоколов после аудита
+
+- Исполнитель: Cursor Agent. Аудит готовности: [Codex-style audit](b26c423a-9c24-4b19-ade0-255dbc133904) — вердикт «MiniMax может начинать SeatMatch».
+- Результат: убраны устаревшие формулировки «предварительный контракт»; в протоколе указан remote GitHub для напарника.
+- Проверки: сверка grep по «предварительн».

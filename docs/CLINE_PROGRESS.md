@@ -17,4 +17,5 @@
 
 ## Записи
 
-Пока пусто. Каркас продукта и утверждённый контракт ещё не готовы.
+Контракт **утверждён v1** (`docs/INTEGRATION_CONTRACT.md`). Каркас ядра на `feat/cursor-core` / `feat/cline-experience`.  
+Можно начинать SeatMatch в `src/experience/seatMatch/`. Записи модуля — ниже по мере работы.
