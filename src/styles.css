@@ -90,6 +90,10 @@ body {
   color: var(--ink);
 }
 
+.seat-match-panel {
+  margin-bottom: 1rem;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 1fr;

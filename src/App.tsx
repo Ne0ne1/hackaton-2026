@@ -9,8 +9,16 @@ import {
   getSeatsWithStatus,
   listCinemas,
   listSessions,
+  registerExperienceModule,
 } from '@/core/hallApi'
+import { SeatMatch } from '@/experience/seatMatch'
 import type { Ticket } from '@/types/hall'
+
+registerExperienceModule({
+  id: 'seat-match',
+  title: 'Подбор места',
+  render: SeatMatch,
+})
 
 export default function App() {
   const cinemas = listCinemas()
@@ -45,6 +53,12 @@ export default function App() {
   function onSessionChange(id: string) {
     setSessionId(id)
     setSelectedSeatId(null)
+    setTicket(null)
+    setError(null)
+  }
+
+  function onSelectSeat(id: string) {
+    setSelectedSeatId(id)
     setTicket(null)
     setError(null)
   }
@@ -94,17 +108,21 @@ export default function App() {
         </label>
       </section>
 
+      <section className="panel seat-match-panel" aria-label="Умный подбор места">
+        <SeatMatch
+          sessionId={sessionId}
+          revision={revision}
+          onPickSeat={onSelectSeat}
+        />
+      </section>
+
       <div className="workspace">
         <section className="panel">
           <h2>Схема зала</h2>
           <SeatMap
             seats={seats}
             selectedSeatId={selectedSeatId}
-            onSelect={(id) => {
-              setSelectedSeatId(id)
-              setTicket(null)
-              setError(null)
-            }}
+            onSelect={onSelectSeat}
           />
           <ul className="legend">
             <li><span className="swatch swatch--vip" /> VIP</li>

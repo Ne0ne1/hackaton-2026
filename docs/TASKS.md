@@ -26,6 +26,7 @@
 | T-004 | done | cursor | Адаптировать инструкции под параллельную работу Cursor и Cline/MiniMax | `AGENTS.md`, `.cursor/rules/**`, `.clinerules/**`, `docs/TEAM_PROTOCOL.md`, `docs/INTEGRATION_CONTRACT.md`, `docs/CLINE_PROGRESS.md`, `docs/TASKS.md`, `docs/DECISIONS.md` | сверка правил; продукт не разрабатывался |
 | T-005 | done | cursor | Создать ветки на GitHub; каркас ядра, модель мест, утвердить контракт | `feat/cursor-core`, `feat/cline-experience`, `src/**`, `docs/INTEGRATION_CONTRACT.md`, `package.json` | `npm run build` |
 | T-006 | done | cursor | Снять устаревшие «предварительный контракт» после аудита готовности SeatMatch | `docs/TEAM_PROTOCOL.md`, `docs/CLINE_PROGRESS.md`, `.clinerules/01-minimax-executor.md` | сверка формулировок |
+| T-007 | done | cursor | Интегрировать SeatMatch (cherry-pick fef2196) в App | `src/App.tsx`, `src/styles.css`, `src/experience/seatMatch/**` | `npm run build`; `node --test` 12/12 |
 
 ## Журнал
 
@@ -65,3 +66,9 @@
 - Исполнитель: Cursor Agent. Аудит: [Codex-style audit](b26c423a-9c24-4b19-ade0-255dbc133904). Вердикт: MiniMax может начинать SeatMatch.
 - Результат: убраны устаревшие «предварительный контракт»; обновлены TEAM_PROTOCOL, CLINE_PROGRESS, clinerules; для напарника канонический push — `github`.
 - Проверки: сверка формулировок.
+
+### T-007 — интеграция SeatMatch
+
+- Исполнитель: Cursor Agent на `feat/cursor-core`. Cherry-pick `fef21960` (без merge всей ветки MiniMax).
+- Результат: `SeatMatch` подключён в `App.tsx` через `onPickSeat` → выделение на схеме + смена 3D-камеры; `registerExperienceModule({ id: 'seat-match' })`; профили Баланс / Лучший обзор / Дешевле из UI модуля. Алгоритм MiniMax не переписывался.
+- Проверки: `npm run build` OK; `node --test src/experience/seatMatch/seatMatch.test.mjs` — 12/12. Push в `main` не делался.
